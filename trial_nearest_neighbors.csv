@@ -1,0 +1,1003 @@
+trial_idx,trial_name,neighbor_rank,neighbor_idx,neighbor_name,similarity_score
+0,Effects of acupuncture and metformin on insulin sensitivity in women with polycystic ovary syndrome and insulin resistance: a three-armed randomized controlled trial,1,5,The Effect of Sitagliptin on Carotid Artery Atherosclerosis in Type 2 Diabetes: The PROLOGUE Randomized Controlled Trial,0.6689788803847359
+0,Effects of acupuncture and metformin on insulin sensitivity in women with polycystic ovary syndrome and insulin resistance: a three-armed randomized controlled trial,2,3,"Effect of vitamin D supplementation in patients with chronic hepatitis C after direct-acting antiviral treatment: a randomized, double-blind, placebo-controlled trial",0.5929679853067791
+0,Effects of acupuncture and metformin on insulin sensitivity in women with polycystic ovary syndrome and insulin resistance: a three-armed randomized controlled trial,3,19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",0.5912074971206313
+0,Effects of acupuncture and metformin on insulin sensitivity in women with polycystic ovary syndrome and insulin resistance: a three-armed randomized controlled trial,4,21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",0.5900707319345737
+0,Effects of acupuncture and metformin on insulin sensitivity in women with polycystic ovary syndrome and insulin resistance: a three-armed randomized controlled trial,5,36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",0.5807901945527072
+1,Ivermectin in combination with doxycycline for treating COVID-19 symptoms: a randomized trial,1,7,Evaluation of Ivermectin as a Potential Treatment for Mild to Moderate COVID-19:  A Double-BlindRandomized  Placebo  Controlled  Trialin Eastern India,0.7366013407358095
+1,Ivermectin in combination with doxycycline for treating COVID-19 symptoms: a randomized trial,2,31,Exploratory data on the clinical efficacy of monoclonal antibodies against SARS-CoV-2 Omicron variant of concern,0.7003485153008452
+1,Ivermectin in combination with doxycycline for treating COVID-19 symptoms: a randomized trial,3,20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,0.6379124254063405
+1,Ivermectin in combination with doxycycline for treating COVID-19 symptoms: a randomized trial,4,17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,0.6107794550687109
+1,Ivermectin in combination with doxycycline for treating COVID-19 symptoms: a randomized trial,5,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.6006706259988012
+2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",1,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.9264889791994356
+2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",2,18,"Prospective Randomized Trial Comparing
+Hepatic Venous Outflow and Renal Function
+after Conventional versus Piggyback Liver
+Transplantation",0.6654871537481615
+2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",3,36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",0.6431342631799991
+2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",4,23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",0.6394548934624112
+2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",5,17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,0.6337532317598056
+3,"Effect of vitamin D supplementation in patients with chronic hepatitis C after direct-acting antiviral treatment: a randomized, double-blind, placebo-controlled trial",1,16,"The Effectiveness and Safety of Intensive Lipid-Lowering with
+Different Rosuvastatin-Based Regimens in Patients at High
+Cardiovascular Disease Risk: A Nonblind, Randomized, Controlled
+Trial",0.6459284056317625
+3,"Effect of vitamin D supplementation in patients with chronic hepatitis C after direct-acting antiviral treatment: a randomized, double-blind, placebo-controlled trial",2,18,"Prospective Randomized Trial Comparing
+Hepatic Venous Outflow and Renal Function
+after Conventional versus Piggyback Liver
+Transplantation",0.638095837420142
+3,"Effect of vitamin D supplementation in patients with chronic hepatitis C after direct-acting antiviral treatment: a randomized, double-blind, placebo-controlled trial",3,0,Effects of acupuncture and metformin on insulin sensitivity in women with polycystic ovary syndrome and insulin resistance: a three-armed randomized controlled trial,0.5929679853067791
+3,"Effect of vitamin D supplementation in patients with chronic hepatitis C after direct-acting antiviral treatment: a randomized, double-blind, placebo-controlled trial",4,5,The Effect of Sitagliptin on Carotid Artery Atherosclerosis in Type 2 Diabetes: The PROLOGUE Randomized Controlled Trial,0.5913611657281462
+3,"Effect of vitamin D supplementation in patients with chronic hepatitis C after direct-acting antiviral treatment: a randomized, double-blind, placebo-controlled trial",5,37,A trial comparing nucleoside monotherapy with combination therapy in HIV-infected adults with CD4 cell counts from 200 to 500 per cubic millimeter. AIDS Clinical Trials Group Study 175 Study Team,0.58437224130843
+4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,1,2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",0.9264889791994356
+4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,2,36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",0.6550358731516018
+4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,3,18,"Prospective Randomized Trial Comparing
+Hepatic Venous Outflow and Renal Function
+after Conventional versus Piggyback Liver
+Transplantation",0.6459748841990192
+4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,4,23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",0.6425606851474647
+4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,5,17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,0.6406669882757645
+5,The Effect of Sitagliptin on Carotid Artery Atherosclerosis in Type 2 Diabetes: The PROLOGUE Randomized Controlled Trial,1,0,Effects of acupuncture and metformin on insulin sensitivity in women with polycystic ovary syndrome and insulin resistance: a three-armed randomized controlled trial,0.6689788803847359
+5,The Effect of Sitagliptin on Carotid Artery Atherosclerosis in Type 2 Diabetes: The PROLOGUE Randomized Controlled Trial,2,16,"The Effectiveness and Safety of Intensive Lipid-Lowering with
+Different Rosuvastatin-Based Regimens in Patients at High
+Cardiovascular Disease Risk: A Nonblind, Randomized, Controlled
+Trial",0.655413239981689
+5,The Effect of Sitagliptin on Carotid Artery Atherosclerosis in Type 2 Diabetes: The PROLOGUE Randomized Controlled Trial,3,3,"Effect of vitamin D supplementation in patients with chronic hepatitis C after direct-acting antiviral treatment: a randomized, double-blind, placebo-controlled trial",0.5913611657281462
+5,The Effect of Sitagliptin on Carotid Artery Atherosclerosis in Type 2 Diabetes: The PROLOGUE Randomized Controlled Trial,4,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.582464909778961
+5,The Effect of Sitagliptin on Carotid Artery Atherosclerosis in Type 2 Diabetes: The PROLOGUE Randomized Controlled Trial,5,19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",0.5819349611083376
+6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",1,35,"Targeting brain health in subjective cognitive decline: insights
+from a multidomain randomized controlled trial",0.7219538539937954
+6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",2,14,The effect of Snoezelen intervention on problem behaviors in children with cerebral palsy: A randomized controlled trial,0.6872428919336663
+6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",3,47," Closing the Achievement Gap through Modification of
+Neurocognitive and Neuroendocrine Function: Results
+from a Cluster Randomized Controlled Trial of an
+Innovative Approach to the Education of Children in
+Kindergarten",0.6785040594780292
+6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",4,32,"Reducing therapeutic misconception: A
+randomized intervention trial in hypothetical
+clinical trials",0.6573048269095154
+6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",5,11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",0.6361250780620374
+7,Evaluation of Ivermectin as a Potential Treatment for Mild to Moderate COVID-19:  A Double-BlindRandomized  Placebo  Controlled  Trialin Eastern India,1,1,Ivermectin in combination with doxycycline for treating COVID-19 symptoms: a randomized trial,0.7366013407358095
+7,Evaluation of Ivermectin as a Potential Treatment for Mild to Moderate COVID-19:  A Double-BlindRandomized  Placebo  Controlled  Trialin Eastern India,2,13,"A telerehabilitation programme in post-discharge
+COVID-19 patients (TERECO): a randomised
+controlled trial",0.6163118800123131
+7,Evaluation of Ivermectin as a Potential Treatment for Mild to Moderate COVID-19:  A Double-BlindRandomized  Placebo  Controlled  Trialin Eastern India,3,31,Exploratory data on the clinical efficacy of monoclonal antibodies against SARS-CoV-2 Omicron variant of concern,0.6121013769481165
+7,Evaluation of Ivermectin as a Potential Treatment for Mild to Moderate COVID-19:  A Double-BlindRandomized  Placebo  Controlled  Trialin Eastern India,4,20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,0.6066940868004256
+7,Evaluation of Ivermectin as a Potential Treatment for Mild to Moderate COVID-19:  A Double-BlindRandomized  Placebo  Controlled  Trialin Eastern India,5,33,A randomized synbiotic trial to prevent sepsis among infants in rural India,0.5996669730808323
+8,"Umbilical vein oxytocin for the treatment of retained
+placenta (Release Study): a double-blind, randomised
+controlled trial",1,12,"Does route matter? Impact of route of oxytocin administration on postpartum bleeding: A double-blind, randomized controlled trial",0.6673693943899597
+8,"Umbilical vein oxytocin for the treatment of retained
+placenta (Release Study): a double-blind, randomised
+controlled trial",2,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.6212714981408913
+8,"Umbilical vein oxytocin for the treatment of retained
+placenta (Release Study): a double-blind, randomised
+controlled trial",3,43,"Influence of needle-insertion depth on epidural
+spread and clinical outcomes in caudal epidural
+injections: a randomized clinical trial",0.6013175216243545
+8,"Umbilical vein oxytocin for the treatment of retained
+placenta (Release Study): a double-blind, randomised
+controlled trial",4,23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",0.5971791843383768
+8,"Umbilical vein oxytocin for the treatment of retained
+placenta (Release Study): a double-blind, randomised
+controlled trial",5,36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",0.5623410245947097
+9,"Influence of videolaryngoscopy using
+McGrath Mac on the need for a helper
+to perform intubation during general
+anaesthesia: a multicentre randomised
+video-no-video trial",1,39,"A Randomized Comparison Between the Pentax AWS
+Video Laryngoscope and the Macintosh Laryngoscope
+in Morbidly Obese Patients",0.7807457575098073
+9,"Influence of videolaryngoscopy using
+McGrath Mac on the need for a helper
+to perform intubation during general
+anaesthesia: a multicentre randomised
+video-no-video trial",2,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.6675246468259616
+9,"Influence of videolaryngoscopy using
+McGrath Mac on the need for a helper
+to perform intubation during general
+anaesthesia: a multicentre randomised
+video-no-video trial",3,40,"A Randomized, Double-Blind Comparison
+of Licorice Versus Sugar-Water Gargle for
+Prevention of Postoperative Sore Throat and
+Postextubation Coughing",0.640924954025698
+9,"Influence of videolaryngoscopy using
+McGrath Mac on the need for a helper
+to perform intubation during general
+anaesthesia: a multicentre randomised
+video-no-video trial",4,46,"Comparison between high-flow
+nasal cannula (HFNC) therapy
+and noninvasive ventilation (NIV) in children
+with acute respiratory failure by bronchiolitis:
+a randomized controlled trial",0.6378573039120258
+9,"Influence of videolaryngoscopy using
+McGrath Mac on the need for a helper
+to perform intubation during general
+anaesthesia: a multicentre randomised
+video-no-video trial",5,23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",0.632362977084278
+10,"Chlorhexidine oral rinses for symptomatic COPD: a randomised, blind, placebo-controlled preliminary study",1,40,"A Randomized, Double-Blind Comparison
+of Licorice Versus Sugar-Water Gargle for
+Prevention of Postoperative Sore Throat and
+Postextubation Coughing",0.6538928879541258
+10,"Chlorhexidine oral rinses for symptomatic COPD: a randomised, blind, placebo-controlled preliminary study",2,24,"Multi-strain probiotics (Hexbio) containing
+MCP BCMC strains improved constipation and
+gut motility in Parkinson’s disease: A
+randomised controlled trial",0.6401423319613209
+10,"Chlorhexidine oral rinses for symptomatic COPD: a randomised, blind, placebo-controlled preliminary study",3,20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,0.6292046030646385
+10,"Chlorhexidine oral rinses for symptomatic COPD: a randomised, blind, placebo-controlled preliminary study",4,1,Ivermectin in combination with doxycycline for treating COVID-19 symptoms: a randomized trial,0.5959545346448035
+10,"Chlorhexidine oral rinses for symptomatic COPD: a randomised, blind, placebo-controlled preliminary study",5,33,A randomized synbiotic trial to prevent sepsis among infants in rural India,0.5956360523056653
+11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",1,28,Evaluation of a community health worker home visit intervention to improve child development in South Africa: A cluster-randomized controlled trial,0.7855637405339957
+11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",2,17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,0.6749288520453041
+11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",3,21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",0.6649489980499099
+11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",4,35,"Targeting brain health in subjective cognitive decline: insights
+from a multidomain randomized controlled trial",0.6493169325868553
+11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",5,27,Effectiveness of community-based health education and home support program to reduce blood pressure among patients with uncontrolled hypertension in Nepal: A cluster-randomized trial,0.647996253651815
+12,"Does route matter? Impact of route of oxytocin administration on postpartum bleeding: A double-blind, randomized controlled trial",1,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.6872639290583262
+12,"Does route matter? Impact of route of oxytocin administration on postpartum bleeding: A double-blind, randomized controlled trial",2,8,"Umbilical vein oxytocin for the treatment of retained
+placenta (Release Study): a double-blind, randomised
+controlled trial",0.6673693943899597
+12,"Does route matter? Impact of route of oxytocin administration on postpartum bleeding: A double-blind, randomized controlled trial",3,43,"Influence of needle-insertion depth on epidural
+spread and clinical outcomes in caudal epidural
+injections: a randomized clinical trial",0.6395956288026476
+12,"Does route matter? Impact of route of oxytocin administration on postpartum bleeding: A double-blind, randomized controlled trial",4,42,"Treatment of Periodontal Disease
+and the Risk of Preterm Birth",0.6173246784118999
+12,"Does route matter? Impact of route of oxytocin administration on postpartum bleeding: A double-blind, randomized controlled trial",5,33,A randomized synbiotic trial to prevent sepsis among infants in rural India,0.6150509017893239
+13,"A telerehabilitation programme in post-discharge
+COVID-19 patients (TERECO): a randomised
+controlled trial",1,19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",0.655813779443156
+13,"A telerehabilitation programme in post-discharge
+COVID-19 patients (TERECO): a randomised
+controlled trial",2,7,Evaluation of Ivermectin as a Potential Treatment for Mild to Moderate COVID-19:  A Double-BlindRandomized  Placebo  Controlled  Trialin Eastern India,0.6163118800123131
+13,"A telerehabilitation programme in post-discharge
+COVID-19 patients (TERECO): a randomised
+controlled trial",3,35,"Targeting brain health in subjective cognitive decline: insights
+from a multidomain randomized controlled trial",0.5935480841535562
+13,"A telerehabilitation programme in post-discharge
+COVID-19 patients (TERECO): a randomised
+controlled trial",4,2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",0.5931382285625573
+13,"A telerehabilitation programme in post-discharge
+COVID-19 patients (TERECO): a randomised
+controlled trial",5,38,Linking alcohol- and drug-dependent adults to primary medical care: a randomized controlled trial of a multi-disciplinary health intervention in a detoxification unit,0.5902075132402619
+14,The effect of Snoezelen intervention on problem behaviors in children with cerebral palsy: A randomized controlled trial,1,6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",0.6872428919336663
+14,The effect of Snoezelen intervention on problem behaviors in children with cerebral palsy: A randomized controlled trial,2,47," Closing the Achievement Gap through Modification of
+Neurocognitive and Neuroendocrine Function: Results
+from a Cluster Randomized Controlled Trial of an
+Innovative Approach to the Education of Children in
+Kindergarten",0.6320611059010762
+14,The effect of Snoezelen intervention on problem behaviors in children with cerebral palsy: A randomized controlled trial,3,35,"Targeting brain health in subjective cognitive decline: insights
+from a multidomain randomized controlled trial",0.617712390123221
+14,The effect of Snoezelen intervention on problem behaviors in children with cerebral palsy: A randomized controlled trial,4,28,Evaluation of a community health worker home visit intervention to improve child development in South Africa: A cluster-randomized controlled trial,0.6053833954034578
+14,The effect of Snoezelen intervention on problem behaviors in children with cerebral palsy: A randomized controlled trial,5,11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",0.5967061312801467
+15,"Internet-delivered therapist-guided
+physical activity for mild to moderate
+depression: a randomized controlled trial",1,29,"A randomized controlled safety and feasibility
+trial of floatation-REST in anxious and
+depressed individuals",0.6749924467845476
+15,"Internet-delivered therapist-guided
+physical activity for mild to moderate
+depression: a randomized controlled trial",2,19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",0.6722045274672135
+15,"Internet-delivered therapist-guided
+physical activity for mild to moderate
+depression: a randomized controlled trial",3,25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",0.6349954115788063
+15,"Internet-delivered therapist-guided
+physical activity for mild to moderate
+depression: a randomized controlled trial",4,6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",0.5951268133079898
+15,"Internet-delivered therapist-guided
+physical activity for mild to moderate
+depression: a randomized controlled trial",5,44,"Impact of a randomized controlled trial of
+discounts on fruits, vegetables, and
+noncaloric beverages in NYC supermarkets on
+food intake and health risk factors",0.5926008748073386
+16,"The Effectiveness and Safety of Intensive Lipid-Lowering with
+Different Rosuvastatin-Based Regimens in Patients at High
+Cardiovascular Disease Risk: A Nonblind, Randomized, Controlled
+Trial",1,5,The Effect of Sitagliptin on Carotid Artery Atherosclerosis in Type 2 Diabetes: The PROLOGUE Randomized Controlled Trial,0.655413239981689
+16,"The Effectiveness and Safety of Intensive Lipid-Lowering with
+Different Rosuvastatin-Based Regimens in Patients at High
+Cardiovascular Disease Risk: A Nonblind, Randomized, Controlled
+Trial",2,3,"Effect of vitamin D supplementation in patients with chronic hepatitis C after direct-acting antiviral treatment: a randomized, double-blind, placebo-controlled trial",0.6459284056317625
+16,"The Effectiveness and Safety of Intensive Lipid-Lowering with
+Different Rosuvastatin-Based Regimens in Patients at High
+Cardiovascular Disease Risk: A Nonblind, Randomized, Controlled
+Trial",3,27,Effectiveness of community-based health education and home support program to reduce blood pressure among patients with uncontrolled hypertension in Nepal: A cluster-randomized trial,0.5893603890251979
+16,"The Effectiveness and Safety of Intensive Lipid-Lowering with
+Different Rosuvastatin-Based Regimens in Patients at High
+Cardiovascular Disease Risk: A Nonblind, Randomized, Controlled
+Trial",4,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.5874194160593441
+16,"The Effectiveness and Safety of Intensive Lipid-Lowering with
+Different Rosuvastatin-Based Regimens in Patients at High
+Cardiovascular Disease Risk: A Nonblind, Randomized, Controlled
+Trial",5,18,"Prospective Randomized Trial Comparing
+Hepatic Venous Outflow and Renal Function
+after Conventional versus Piggyback Liver
+Transplantation",0.5868292089300847
+17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,1,25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",0.7340279038789301
+17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,2,11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",0.6749288520453041
+17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,3,38,Linking alcohol- and drug-dependent adults to primary medical care: a randomized controlled trial of a multi-disciplinary health intervention in a detoxification unit,0.6733521013482542
+17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,4,20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,0.6652748639647588
+17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,5,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.6406669882757645
+18,"Prospective Randomized Trial Comparing
+Hepatic Venous Outflow and Renal Function
+after Conventional versus Piggyback Liver
+Transplantation",1,2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",0.6654871537481615
+18,"Prospective Randomized Trial Comparing
+Hepatic Venous Outflow and Renal Function
+after Conventional versus Piggyback Liver
+Transplantation",2,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.6459748841990192
+18,"Prospective Randomized Trial Comparing
+Hepatic Venous Outflow and Renal Function
+after Conventional versus Piggyback Liver
+Transplantation",3,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.6443709554393409
+18,"Prospective Randomized Trial Comparing
+Hepatic Venous Outflow and Renal Function
+after Conventional versus Piggyback Liver
+Transplantation",4,3,"Effect of vitamin D supplementation in patients with chronic hepatitis C after direct-acting antiviral treatment: a randomized, double-blind, placebo-controlled trial",0.638095837420142
+18,"Prospective Randomized Trial Comparing
+Hepatic Venous Outflow and Renal Function
+after Conventional versus Piggyback Liver
+Transplantation",5,23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",0.5989327494002724
+19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",1,15,"Internet-delivered therapist-guided
+physical activity for mild to moderate
+depression: a randomized controlled trial",0.6722045274672135
+19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",2,25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",0.6623759537712826
+19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",3,13,"A telerehabilitation programme in post-discharge
+COVID-19 patients (TERECO): a randomised
+controlled trial",0.655813779443156
+19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",4,34,"Exercise Training and Weight Gain in Obese
+Pregnant Women: A Randomized Controlled
+Trial (ETIP Trial)",0.6376458653554576
+19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",5,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.6300170483275682
+20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,1,25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",0.6792145111537368
+20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,2,17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,0.6652748639647588
+20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,3,1,Ivermectin in combination with doxycycline for treating COVID-19 symptoms: a randomized trial,0.6379124254063405
+20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,4,10,"Chlorhexidine oral rinses for symptomatic COPD: a randomised, blind, placebo-controlled preliminary study",0.6292046030646385
+20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,5,11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",0.6272115984721831
+21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",1,30,Health insurance coverage with or without a nurse-led task shifting strategy for hypertension control: A pragmatic cluster randomized trial in Ghana,0.6752996228198211
+21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",2,34,"Exercise Training and Weight Gain in Obese
+Pregnant Women: A Randomized Controlled
+Trial (ETIP Trial)",0.6717950631996453
+21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",3,42,"Treatment of Periodontal Disease
+and the Risk of Preterm Birth",0.6701456514639316
+21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",4,11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",0.6649489980499099
+21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",5,27,Effectiveness of community-based health education and home support program to reduce blood pressure among patients with uncontrolled hypertension in Nepal: A cluster-randomized trial,0.6644130172739611
+22,"Can recombinant human
+thrombomodulin increase survival
+among patients with severe septicinduced disseminated intravascular
+coagulation: a single-centre, open-label,
+randomised controlled trial",1,31,Exploratory data on the clinical efficacy of monoclonal antibodies against SARS-CoV-2 Omicron variant of concern,0.5863782075635506
+22,"Can recombinant human
+thrombomodulin increase survival
+among patients with severe septicinduced disseminated intravascular
+coagulation: a single-centre, open-label,
+randomised controlled trial",2,3,"Effect of vitamin D supplementation in patients with chronic hepatitis C after direct-acting antiviral treatment: a randomized, double-blind, placebo-controlled trial",0.5746324681768837
+22,"Can recombinant human
+thrombomodulin increase survival
+among patients with severe septicinduced disseminated intravascular
+coagulation: a single-centre, open-label,
+randomised controlled trial",3,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.5745322230127817
+22,"Can recombinant human
+thrombomodulin increase survival
+among patients with severe septicinduced disseminated intravascular
+coagulation: a single-centre, open-label,
+randomised controlled trial",4,2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",0.5604902506382927
+22,"Can recombinant human
+thrombomodulin increase survival
+among patients with severe septicinduced disseminated intravascular
+coagulation: a single-centre, open-label,
+randomised controlled trial",5,18,"Prospective Randomized Trial Comparing
+Hepatic Venous Outflow and Renal Function
+after Conventional versus Piggyback Liver
+Transplantation",0.558543350318409
+23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",1,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.722411691568151
+23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",2,43,"Influence of needle-insertion depth on epidural
+spread and clinical outcomes in caudal epidural
+injections: a randomized clinical trial",0.7007812957510795
+23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",3,36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",0.6813501166536606
+23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",4,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.6425606851474647
+23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",5,2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",0.6394548934624112
+24,"Multi-strain probiotics (Hexbio) containing
+MCP BCMC strains improved constipation and
+gut motility in Parkinson’s disease: A
+randomised controlled trial",1,10,"Chlorhexidine oral rinses for symptomatic COPD: a randomised, blind, placebo-controlled preliminary study",0.6401423319613209
+24,"Multi-strain probiotics (Hexbio) containing
+MCP BCMC strains improved constipation and
+gut motility in Parkinson’s disease: A
+randomised controlled trial",2,48,"Impact of a pre-feeding oral stimulation
+program on first feed attempt in preterm
+infants: Double-blind controlled clinical trial",0.5755018348337304
+24,"Multi-strain probiotics (Hexbio) containing
+MCP BCMC strains improved constipation and
+gut motility in Parkinson’s disease: A
+randomised controlled trial",3,36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",0.5748039943468035
+24,"Multi-strain probiotics (Hexbio) containing
+MCP BCMC strains improved constipation and
+gut motility in Parkinson’s disease: A
+randomised controlled trial",4,14,The effect of Snoezelen intervention on problem behaviors in children with cerebral palsy: A randomized controlled trial,0.5700674766966594
+24,"Multi-strain probiotics (Hexbio) containing
+MCP BCMC strains improved constipation and
+gut motility in Parkinson’s disease: A
+randomised controlled trial",5,35,"Targeting brain health in subjective cognitive decline: insights
+from a multidomain randomized controlled trial",0.5628807023291685
+25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",1,17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,0.7340279038789301
+25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",2,20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,0.6792145111537368
+25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",3,19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",0.6623759537712826
+25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",4,27,Effectiveness of community-based health education and home support program to reduce blood pressure among patients with uncontrolled hypertension in Nepal: A cluster-randomized trial,0.6377833909626422
+25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",5,15,"Internet-delivered therapist-guided
+physical activity for mild to moderate
+depression: a randomized controlled trial",0.6349954115788063
+26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",1,23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",0.722411691568151
+26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",2,12,"Does route matter? Impact of route of oxytocin administration on postpartum bleeding: A double-blind, randomized controlled trial",0.6872639290583262
+26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",3,9,"Influence of videolaryngoscopy using
+McGrath Mac on the need for a helper
+to perform intubation during general
+anaesthesia: a multicentre randomised
+video-no-video trial",0.6675246468259616
+26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",4,43,"Influence of needle-insertion depth on epidural
+spread and clinical outcomes in caudal epidural
+injections: a randomized clinical trial",0.6537467379944065
+26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",5,18,"Prospective Randomized Trial Comparing
+Hepatic Venous Outflow and Renal Function
+after Conventional versus Piggyback Liver
+Transplantation",0.6443709554393409
+27,Effectiveness of community-based health education and home support program to reduce blood pressure among patients with uncontrolled hypertension in Nepal: A cluster-randomized trial,1,30,Health insurance coverage with or without a nurse-led task shifting strategy for hypertension control: A pragmatic cluster randomized trial in Ghana,0.779838434333218
+27,Effectiveness of community-based health education and home support program to reduce blood pressure among patients with uncontrolled hypertension in Nepal: A cluster-randomized trial,2,21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",0.6644130172739611
+27,Effectiveness of community-based health education and home support program to reduce blood pressure among patients with uncontrolled hypertension in Nepal: A cluster-randomized trial,3,11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",0.647996253651815
+27,Effectiveness of community-based health education and home support program to reduce blood pressure among patients with uncontrolled hypertension in Nepal: A cluster-randomized trial,4,17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,0.6398631354902617
+27,Effectiveness of community-based health education and home support program to reduce blood pressure among patients with uncontrolled hypertension in Nepal: A cluster-randomized trial,5,25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",0.6377833909626422
+28,Evaluation of a community health worker home visit intervention to improve child development in South Africa: A cluster-randomized controlled trial,1,11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",0.7855637405339957
+28,Evaluation of a community health worker home visit intervention to improve child development in South Africa: A cluster-randomized controlled trial,2,21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",0.6238127572548822
+28,Evaluation of a community health worker home visit intervention to improve child development in South Africa: A cluster-randomized controlled trial,3,14,The effect of Snoezelen intervention on problem behaviors in children with cerebral palsy: A randomized controlled trial,0.6053833954034578
+28,Evaluation of a community health worker home visit intervention to improve child development in South Africa: A cluster-randomized controlled trial,4,17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,0.60212604505302
+28,Evaluation of a community health worker home visit intervention to improve child development in South Africa: A cluster-randomized controlled trial,5,47," Closing the Achievement Gap through Modification of
+Neurocognitive and Neuroendocrine Function: Results
+from a Cluster Randomized Controlled Trial of an
+Innovative Approach to the Education of Children in
+Kindergarten",0.597947392760168
+29,"A randomized controlled safety and feasibility
+trial of floatation-REST in anxious and
+depressed individuals",1,15,"Internet-delivered therapist-guided
+physical activity for mild to moderate
+depression: a randomized controlled trial",0.6749924467845476
+29,"A randomized controlled safety and feasibility
+trial of floatation-REST in anxious and
+depressed individuals",2,19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",0.5940896760591057
+29,"A randomized controlled safety and feasibility
+trial of floatation-REST in anxious and
+depressed individuals",3,23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",0.5920523938111064
+29,"A randomized controlled safety and feasibility
+trial of floatation-REST in anxious and
+depressed individuals",4,13,"A telerehabilitation programme in post-discharge
+COVID-19 patients (TERECO): a randomised
+controlled trial",0.580708290459097
+29,"A randomized controlled safety and feasibility
+trial of floatation-REST in anxious and
+depressed individuals",5,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.5792303762492799
+30,Health insurance coverage with or without a nurse-led task shifting strategy for hypertension control: A pragmatic cluster randomized trial in Ghana,1,27,Effectiveness of community-based health education and home support program to reduce blood pressure among patients with uncontrolled hypertension in Nepal: A cluster-randomized trial,0.779838434333218
+30,Health insurance coverage with or without a nurse-led task shifting strategy for hypertension control: A pragmatic cluster randomized trial in Ghana,2,21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",0.6752996228198211
+30,Health insurance coverage with or without a nurse-led task shifting strategy for hypertension control: A pragmatic cluster randomized trial in Ghana,3,11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",0.6467759723911622
+30,Health insurance coverage with or without a nurse-led task shifting strategy for hypertension control: A pragmatic cluster randomized trial in Ghana,4,17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,0.6387110937981
+30,Health insurance coverage with or without a nurse-led task shifting strategy for hypertension control: A pragmatic cluster randomized trial in Ghana,5,25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",0.6339200120473546
+31,Exploratory data on the clinical efficacy of monoclonal antibodies against SARS-CoV-2 Omicron variant of concern,1,1,Ivermectin in combination with doxycycline for treating COVID-19 symptoms: a randomized trial,0.7003485153008452
+31,Exploratory data on the clinical efficacy of monoclonal antibodies against SARS-CoV-2 Omicron variant of concern,2,2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",0.6261563400057132
+31,Exploratory data on the clinical efficacy of monoclonal antibodies against SARS-CoV-2 Omicron variant of concern,3,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.6188042530650704
+31,Exploratory data on the clinical efficacy of monoclonal antibodies against SARS-CoV-2 Omicron variant of concern,4,7,Evaluation of Ivermectin as a Potential Treatment for Mild to Moderate COVID-19:  A Double-BlindRandomized  Placebo  Controlled  Trialin Eastern India,0.6121013769481165
+31,Exploratory data on the clinical efficacy of monoclonal antibodies against SARS-CoV-2 Omicron variant of concern,5,20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,0.6079091865646638
+32,"Reducing therapeutic misconception: A
+randomized intervention trial in hypothetical
+clinical trials",1,6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",0.6573048269095154
+32,"Reducing therapeutic misconception: A
+randomized intervention trial in hypothetical
+clinical trials",2,45,"Evaluating the effectiveness of a structured,
+simulator-assisted, peer-led training on cardiovascular
+physical examination in third-year medical students: a
+prospective, randomized, controlled trial",0.6136494769483705
+32,"Reducing therapeutic misconception: A
+randomized intervention trial in hypothetical
+clinical trials",3,15,"Internet-delivered therapist-guided
+physical activity for mild to moderate
+depression: a randomized controlled trial",0.5842401648283938
+32,"Reducing therapeutic misconception: A
+randomized intervention trial in hypothetical
+clinical trials",4,25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",0.5792527188096868
+32,"Reducing therapeutic misconception: A
+randomized intervention trial in hypothetical
+clinical trials",5,29,"A randomized controlled safety and feasibility
+trial of floatation-REST in anxious and
+depressed individuals",0.5731204139666632
+33,A randomized synbiotic trial to prevent sepsis among infants in rural India,1,34,"Exercise Training and Weight Gain in Obese
+Pregnant Women: A Randomized Controlled
+Trial (ETIP Trial)",0.6666758701864515
+33,A randomized synbiotic trial to prevent sepsis among infants in rural India,2,42,"Treatment of Periodontal Disease
+and the Risk of Preterm Birth",0.6462927598723288
+33,A randomized synbiotic trial to prevent sepsis among infants in rural India,3,21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",0.6388851595464111
+33,A randomized synbiotic trial to prevent sepsis among infants in rural India,4,36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",0.6319950810791231
+33,A randomized synbiotic trial to prevent sepsis among infants in rural India,5,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.6232610421202229
+34,"Exercise Training and Weight Gain in Obese
+Pregnant Women: A Randomized Controlled
+Trial (ETIP Trial)",1,21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",0.6717950631996453
+34,"Exercise Training and Weight Gain in Obese
+Pregnant Women: A Randomized Controlled
+Trial (ETIP Trial)",2,33,A randomized synbiotic trial to prevent sepsis among infants in rural India,0.6666758701864515
+34,"Exercise Training and Weight Gain in Obese
+Pregnant Women: A Randomized Controlled
+Trial (ETIP Trial)",3,42,"Treatment of Periodontal Disease
+and the Risk of Preterm Birth",0.6603886764112606
+34,"Exercise Training and Weight Gain in Obese
+Pregnant Women: A Randomized Controlled
+Trial (ETIP Trial)",4,19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",0.6376458653554576
+34,"Exercise Training and Weight Gain in Obese
+Pregnant Women: A Randomized Controlled
+Trial (ETIP Trial)",5,48,"Impact of a pre-feeding oral stimulation
+program on first feed attempt in preterm
+infants: Double-blind controlled clinical trial",0.6213709316094352
+35,"Targeting brain health in subjective cognitive decline: insights
+from a multidomain randomized controlled trial",1,6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",0.7219538539937954
+35,"Targeting brain health in subjective cognitive decline: insights
+from a multidomain randomized controlled trial",2,11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",0.6493169325868553
+35,"Targeting brain health in subjective cognitive decline: insights
+from a multidomain randomized controlled trial",3,14,The effect of Snoezelen intervention on problem behaviors in children with cerebral palsy: A randomized controlled trial,0.617712390123221
+35,"Targeting brain health in subjective cognitive decline: insights
+from a multidomain randomized controlled trial",4,47," Closing the Achievement Gap through Modification of
+Neurocognitive and Neuroendocrine Function: Results
+from a Cluster Randomized Controlled Trial of an
+Innovative Approach to the Education of Children in
+Kindergarten",0.6057098313821453
+35,"Targeting brain health in subjective cognitive decline: insights
+from a multidomain randomized controlled trial",5,13,"A telerehabilitation programme in post-discharge
+COVID-19 patients (TERECO): a randomised
+controlled trial",0.5935480841535562
+36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",1,23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",0.6813501166536606
+36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",2,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.6550358731516018
+36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",3,2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",0.6431342631799991
+36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",4,43,"Influence of needle-insertion depth on epidural
+spread and clinical outcomes in caudal epidural
+injections: a randomized clinical trial",0.6379838993655116
+36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",5,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.6339810557596423
+37,A trial comparing nucleoside monotherapy with combination therapy in HIV-infected adults with CD4 cell counts from 200 to 500 per cubic millimeter. AIDS Clinical Trials Group Study 175 Study Team,1,3,"Effect of vitamin D supplementation in patients with chronic hepatitis C after direct-acting antiviral treatment: a randomized, double-blind, placebo-controlled trial",0.58437224130843
+37,A trial comparing nucleoside monotherapy with combination therapy in HIV-infected adults with CD4 cell counts from 200 to 500 per cubic millimeter. AIDS Clinical Trials Group Study 175 Study Team,2,20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,0.5803269089789215
+37,A trial comparing nucleoside monotherapy with combination therapy in HIV-infected adults with CD4 cell counts from 200 to 500 per cubic millimeter. AIDS Clinical Trials Group Study 175 Study Team,3,1,Ivermectin in combination with doxycycline for treating COVID-19 symptoms: a randomized trial,0.5703473950587288
+37,A trial comparing nucleoside monotherapy with combination therapy in HIV-infected adults with CD4 cell counts from 200 to 500 per cubic millimeter. AIDS Clinical Trials Group Study 175 Study Team,4,25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",0.5567796257665603
+37,A trial comparing nucleoside monotherapy with combination therapy in HIV-infected adults with CD4 cell counts from 200 to 500 per cubic millimeter. AIDS Clinical Trials Group Study 175 Study Team,5,31,Exploratory data on the clinical efficacy of monoclonal antibodies against SARS-CoV-2 Omicron variant of concern,0.5384684264796196
+38,Linking alcohol- and drug-dependent adults to primary medical care: a randomized controlled trial of a multi-disciplinary health intervention in a detoxification unit,1,17,The Kanyakla study: Randomized controlled trial of a microclinic social network intervention for promoting engagement and retention in HIV care in rural western Kenya,0.6733521013482542
+38,Linking alcohol- and drug-dependent adults to primary medical care: a randomized controlled trial of a multi-disciplinary health intervention in a detoxification unit,2,4,A randomized clinical trial assessing the effect of automated medication-targeted alerts on acute kidney injury outcomes,0.623730603318284
+38,Linking alcohol- and drug-dependent adults to primary medical care: a randomized controlled trial of a multi-disciplinary health intervention in a detoxification unit,3,25,"Mobile phone reminders and peer counseling
+improve adherence and treatment outcomes
+of patients on ART in Malaysia: A randomized
+clinical trial",0.6235603777011977
+38,Linking alcohol- and drug-dependent adults to primary medical care: a randomized controlled trial of a multi-disciplinary health intervention in a detoxification unit,4,20,Computer-aided X-ray screening for tuberculosis and HIV testing among adults with cough in Malawi (the PROSPECT study): A randomised trial and cost-effectiveness analysis,0.6093822291439476
+38,Linking alcohol- and drug-dependent adults to primary medical care: a randomized controlled trial of a multi-disciplinary health intervention in a detoxification unit,5,2,"Electronic health record alerts for acute kidney injury:
+multicenter, randomized clinical trial",0.5997650066738688
+39,"A Randomized Comparison Between the Pentax AWS
+Video Laryngoscope and the Macintosh Laryngoscope
+in Morbidly Obese Patients",1,9,"Influence of videolaryngoscopy using
+McGrath Mac on the need for a helper
+to perform intubation during general
+anaesthesia: a multicentre randomised
+video-no-video trial",0.7807457575098073
+39,"A Randomized Comparison Between the Pentax AWS
+Video Laryngoscope and the Macintosh Laryngoscope
+in Morbidly Obese Patients",2,40,"A Randomized, Double-Blind Comparison
+of Licorice Versus Sugar-Water Gargle for
+Prevention of Postoperative Sore Throat and
+Postextubation Coughing",0.6926853375559475
+39,"A Randomized Comparison Between the Pentax AWS
+Video Laryngoscope and the Macintosh Laryngoscope
+in Morbidly Obese Patients",3,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.6304371835824621
+39,"A Randomized Comparison Between the Pentax AWS
+Video Laryngoscope and the Macintosh Laryngoscope
+in Morbidly Obese Patients",4,46,"Comparison between high-flow
+nasal cannula (HFNC) therapy
+and noninvasive ventilation (NIV) in children
+with acute respiratory failure by bronchiolitis:
+a randomized controlled trial",0.5962827280220054
+39,"A Randomized Comparison Between the Pentax AWS
+Video Laryngoscope and the Macintosh Laryngoscope
+in Morbidly Obese Patients",5,23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",0.5887263157467921
+40,"A Randomized, Double-Blind Comparison
+of Licorice Versus Sugar-Water Gargle for
+Prevention of Postoperative Sore Throat and
+Postextubation Coughing",1,39,"A Randomized Comparison Between the Pentax AWS
+Video Laryngoscope and the Macintosh Laryngoscope
+in Morbidly Obese Patients",0.6926853375559475
+40,"A Randomized, Double-Blind Comparison
+of Licorice Versus Sugar-Water Gargle for
+Prevention of Postoperative Sore Throat and
+Postextubation Coughing",2,10,"Chlorhexidine oral rinses for symptomatic COPD: a randomised, blind, placebo-controlled preliminary study",0.6538928879541258
+40,"A Randomized, Double-Blind Comparison
+of Licorice Versus Sugar-Water Gargle for
+Prevention of Postoperative Sore Throat and
+Postextubation Coughing",3,9,"Influence of videolaryngoscopy using
+McGrath Mac on the need for a helper
+to perform intubation during general
+anaesthesia: a multicentre randomised
+video-no-video trial",0.640924954025698
+40,"A Randomized, Double-Blind Comparison
+of Licorice Versus Sugar-Water Gargle for
+Prevention of Postoperative Sore Throat and
+Postextubation Coughing",4,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.6398532581077269
+40,"A Randomized, Double-Blind Comparison
+of Licorice Versus Sugar-Water Gargle for
+Prevention of Postoperative Sore Throat and
+Postextubation Coughing",5,23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",0.6313510511363112
+41,"Combined Versus Sequential Injection of Mepivacaine
+and Ropivacaine for Supraclavicular Nerve Blocks",1,43,"Influence of needle-insertion depth on epidural
+spread and clinical outcomes in caudal epidural
+injections: a randomized clinical trial",0.6578613939282348
+41,"Combined Versus Sequential Injection of Mepivacaine
+and Ropivacaine for Supraclavicular Nerve Blocks",2,23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",0.6357459073555836
+41,"Combined Versus Sequential Injection of Mepivacaine
+and Ropivacaine for Supraclavicular Nerve Blocks",3,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.5850567581236841
+41,"Combined Versus Sequential Injection of Mepivacaine
+and Ropivacaine for Supraclavicular Nerve Blocks",4,49,"Comparison of a newly established
+emotional stimulus approach to a
+classical assessment-driven approach in
+BLS training: a randomised
+controlled trial",0.5776365787933266
+41,"Combined Versus Sequential Injection of Mepivacaine
+and Ropivacaine for Supraclavicular Nerve Blocks",5,40,"A Randomized, Double-Blind Comparison
+of Licorice Versus Sugar-Water Gargle for
+Prevention of Postoperative Sore Throat and
+Postextubation Coughing",0.573937253427698
+42,"Treatment of Periodontal Disease
+and the Risk of Preterm Birth",1,21,"Detection and initial management of
+gestational diabetes through primary health
+care services in Morocco: An effectivenessimplementation trial",0.6701456514639316
+42,"Treatment of Periodontal Disease
+and the Risk of Preterm Birth",2,34,"Exercise Training and Weight Gain in Obese
+Pregnant Women: A Randomized Controlled
+Trial (ETIP Trial)",0.6603886764112606
+42,"Treatment of Periodontal Disease
+and the Risk of Preterm Birth",3,33,A randomized synbiotic trial to prevent sepsis among infants in rural India,0.6462927598723288
+42,"Treatment of Periodontal Disease
+and the Risk of Preterm Birth",4,48,"Impact of a pre-feeding oral stimulation
+program on first feed attempt in preterm
+infants: Double-blind controlled clinical trial",0.6430637418570867
+42,"Treatment of Periodontal Disease
+and the Risk of Preterm Birth",5,11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",0.6177002792282147
+43,"Influence of needle-insertion depth on epidural
+spread and clinical outcomes in caudal epidural
+injections: a randomized clinical trial",1,23,"Auriculotherapy in the prevention of postoperative urinary retention in patients with thoracotomy and thoracic epidural analgesia
+A randomized, double-blinded trial",0.7007812957510795
+43,"Influence of needle-insertion depth on epidural
+spread and clinical outcomes in caudal epidural
+injections: a randomized clinical trial",2,41,"Combined Versus Sequential Injection of Mepivacaine
+and Ropivacaine for Supraclavicular Nerve Blocks",0.6578613939282348
+43,"Influence of needle-insertion depth on epidural
+spread and clinical outcomes in caudal epidural
+injections: a randomized clinical trial",3,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.6537467379944065
+43,"Influence of needle-insertion depth on epidural
+spread and clinical outcomes in caudal epidural
+injections: a randomized clinical trial",4,12,"Does route matter? Impact of route of oxytocin administration on postpartum bleeding: A double-blind, randomized controlled trial",0.6395956288026476
+43,"Influence of needle-insertion depth on epidural
+spread and clinical outcomes in caudal epidural
+injections: a randomized clinical trial",5,36,"A Randomized Trial of Rectal Indomethacin
+to Prevent Post-ERCP Pancreatitis",0.6379838993655116
+44,"Impact of a randomized controlled trial of
+discounts on fruits, vegetables, and
+noncaloric beverages in NYC supermarkets on
+food intake and health risk factors",1,27,Effectiveness of community-based health education and home support program to reduce blood pressure among patients with uncontrolled hypertension in Nepal: A cluster-randomized trial,0.611116714304912
+44,"Impact of a randomized controlled trial of
+discounts on fruits, vegetables, and
+noncaloric beverages in NYC supermarkets on
+food intake and health risk factors",2,19,"Effect of ecological momentary assessment,
+goal-setting and personalized phone-calls on
+adherence to interval walking training using
+the InterWalk application among patients with
+type 2 diabetes—A pilot randomized
+controlled trial",0.6075541027233966
+44,"Impact of a randomized controlled trial of
+discounts on fruits, vegetables, and
+noncaloric beverages in NYC supermarkets on
+food intake and health risk factors",3,30,Health insurance coverage with or without a nurse-led task shifting strategy for hypertension control: A pragmatic cluster randomized trial in Ghana,0.6008216563072707
+44,"Impact of a randomized controlled trial of
+discounts on fruits, vegetables, and
+noncaloric beverages in NYC supermarkets on
+food intake and health risk factors",4,34,"Exercise Training and Weight Gain in Obese
+Pregnant Women: A Randomized Controlled
+Trial (ETIP Trial)",0.5927140201262816
+44,"Impact of a randomized controlled trial of
+discounts on fruits, vegetables, and
+noncaloric beverages in NYC supermarkets on
+food intake and health risk factors",5,15,"Internet-delivered therapist-guided
+physical activity for mild to moderate
+depression: a randomized controlled trial",0.5926008748073386
+45,"Evaluating the effectiveness of a structured,
+simulator-assisted, peer-led training on cardiovascular
+physical examination in third-year medical students: a
+prospective, randomized, controlled trial",1,49,"Comparison of a newly established
+emotional stimulus approach to a
+classical assessment-driven approach in
+BLS training: a randomised
+controlled trial",0.673606623135069
+45,"Evaluating the effectiveness of a structured,
+simulator-assisted, peer-led training on cardiovascular
+physical examination in third-year medical students: a
+prospective, randomized, controlled trial",2,32,"Reducing therapeutic misconception: A
+randomized intervention trial in hypothetical
+clinical trials",0.6136494769483705
+45,"Evaluating the effectiveness of a structured,
+simulator-assisted, peer-led training on cardiovascular
+physical examination in third-year medical students: a
+prospective, randomized, controlled trial",3,6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",0.5968603654967723
+45,"Evaluating the effectiveness of a structured,
+simulator-assisted, peer-led training on cardiovascular
+physical examination in third-year medical students: a
+prospective, randomized, controlled trial",4,27,Effectiveness of community-based health education and home support program to reduce blood pressure among patients with uncontrolled hypertension in Nepal: A cluster-randomized trial,0.578592068077725
+45,"Evaluating the effectiveness of a structured,
+simulator-assisted, peer-led training on cardiovascular
+physical examination in third-year medical students: a
+prospective, randomized, controlled trial",5,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.56455354563575
+46,"Comparison between high-flow
+nasal cannula (HFNC) therapy
+and noninvasive ventilation (NIV) in children
+with acute respiratory failure by bronchiolitis:
+a randomized controlled trial",1,9,"Influence of videolaryngoscopy using
+McGrath Mac on the need for a helper
+to perform intubation during general
+anaesthesia: a multicentre randomised
+video-no-video trial",0.6378573039120258
+46,"Comparison between high-flow
+nasal cannula (HFNC) therapy
+and noninvasive ventilation (NIV) in children
+with acute respiratory failure by bronchiolitis:
+a randomized controlled trial",2,26,"Impact of the modality of mechanical ventilation
+on bleeding during pituitary surgery
+A single blinded randomized trial",0.6303505456641568
+46,"Comparison between high-flow
+nasal cannula (HFNC) therapy
+and noninvasive ventilation (NIV) in children
+with acute respiratory failure by bronchiolitis:
+a randomized controlled trial",3,39,"A Randomized Comparison Between the Pentax AWS
+Video Laryngoscope and the Macintosh Laryngoscope
+in Morbidly Obese Patients",0.5962827280220054
+46,"Comparison between high-flow
+nasal cannula (HFNC) therapy
+and noninvasive ventilation (NIV) in children
+with acute respiratory failure by bronchiolitis:
+a randomized controlled trial",4,18,"Prospective Randomized Trial Comparing
+Hepatic Venous Outflow and Renal Function
+after Conventional versus Piggyback Liver
+Transplantation",0.5854492033348084
+46,"Comparison between high-flow
+nasal cannula (HFNC) therapy
+and noninvasive ventilation (NIV) in children
+with acute respiratory failure by bronchiolitis:
+a randomized controlled trial",5,40,"A Randomized, Double-Blind Comparison
+of Licorice Versus Sugar-Water Gargle for
+Prevention of Postoperative Sore Throat and
+Postextubation Coughing",0.5711600983336572
+47," Closing the Achievement Gap through Modification of
+Neurocognitive and Neuroendocrine Function: Results
+from a Cluster Randomized Controlled Trial of an
+Innovative Approach to the Education of Children in
+Kindergarten",1,6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",0.6785040594780292
+47," Closing the Achievement Gap through Modification of
+Neurocognitive and Neuroendocrine Function: Results
+from a Cluster Randomized Controlled Trial of an
+Innovative Approach to the Education of Children in
+Kindergarten",2,11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",0.6367674042448408
+47," Closing the Achievement Gap through Modification of
+Neurocognitive and Neuroendocrine Function: Results
+from a Cluster Randomized Controlled Trial of an
+Innovative Approach to the Education of Children in
+Kindergarten",3,14,The effect of Snoezelen intervention on problem behaviors in children with cerebral palsy: A randomized controlled trial,0.6320611059010762
+47," Closing the Achievement Gap through Modification of
+Neurocognitive and Neuroendocrine Function: Results
+from a Cluster Randomized Controlled Trial of an
+Innovative Approach to the Education of Children in
+Kindergarten",4,35,"Targeting brain health in subjective cognitive decline: insights
+from a multidomain randomized controlled trial",0.6057098313821453
+47," Closing the Achievement Gap through Modification of
+Neurocognitive and Neuroendocrine Function: Results
+from a Cluster Randomized Controlled Trial of an
+Innovative Approach to the Education of Children in
+Kindergarten",5,28,Evaluation of a community health worker home visit intervention to improve child development in South Africa: A cluster-randomized controlled trial,0.597947392760168
+48,"Impact of a pre-feeding oral stimulation
+program on first feed attempt in preterm
+infants: Double-blind controlled clinical trial",1,42,"Treatment of Periodontal Disease
+and the Risk of Preterm Birth",0.6430637418570867
+48,"Impact of a pre-feeding oral stimulation
+program on first feed attempt in preterm
+infants: Double-blind controlled clinical trial",2,34,"Exercise Training and Weight Gain in Obese
+Pregnant Women: A Randomized Controlled
+Trial (ETIP Trial)",0.6213709316094352
+48,"Impact of a pre-feeding oral stimulation
+program on first feed attempt in preterm
+infants: Double-blind controlled clinical trial",3,6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",0.6051816078732737
+48,"Impact of a pre-feeding oral stimulation
+program on first feed attempt in preterm
+infants: Double-blind controlled clinical trial",4,33,A randomized synbiotic trial to prevent sepsis among infants in rural India,0.6006095917481054
+48,"Impact of a pre-feeding oral stimulation
+program on first feed attempt in preterm
+infants: Double-blind controlled clinical trial",5,11,"Two-year impact of community-based health
+screening and parenting groups on child
+development in Zambia: Follow-up to a
+cluster-randomized controlled trial",0.5983421073949128
+49,"Comparison of a newly established
+emotional stimulus approach to a
+classical assessment-driven approach in
+BLS training: a randomised
+controlled trial",1,45,"Evaluating the effectiveness of a structured,
+simulator-assisted, peer-led training on cardiovascular
+physical examination in third-year medical students: a
+prospective, randomized, controlled trial",0.673606623135069
+49,"Comparison of a newly established
+emotional stimulus approach to a
+classical assessment-driven approach in
+BLS training: a randomised
+controlled trial",2,6,"Comparing Two Methods of Delivering ThinkRx Cognitive Training
+to Children Ages 8–14: a Randomized Controlled Trial of Equivalency",0.6027007530640834
+49,"Comparison of a newly established
+emotional stimulus approach to a
+classical assessment-driven approach in
+BLS training: a randomised
+controlled trial",3,14,The effect of Snoezelen intervention on problem behaviors in children with cerebral palsy: A randomized controlled trial,0.5776702389446434
+49,"Comparison of a newly established
+emotional stimulus approach to a
+classical assessment-driven approach in
+BLS training: a randomised
+controlled trial",4,41,"Combined Versus Sequential Injection of Mepivacaine
+and Ropivacaine for Supraclavicular Nerve Blocks",0.5776365787933266
+49,"Comparison of a newly established
+emotional stimulus approach to a
+classical assessment-driven approach in
+BLS training: a randomised
+controlled trial",5,32,"Reducing therapeutic misconception: A
+randomized intervention trial in hypothetical
+clinical trials",0.5726950887819255

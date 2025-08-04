@@ -1,0 +1,200 @@
+---
+title: "HAIPW Pipeline: Pooled Results"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(data.table)
+library(dplyr)
+library(randomForest)
+library(xtable)
+```
+
+## GitHub Documents
+
+```{r functions}
+# 1) Full-sample AIPW influence curve
+compute_aipw_full <- function(X, Y, W) {
+  pi_hat <- mean(W)
+  df1    <- as.data.frame(cbind(Y = Y[W==1],  X = X[W==1, , drop=FALSE]))
+  df0    <- as.data.frame(cbind(Y = Y[W==0],  X = X[W==0, , drop=FALSE]))
+  fit1   <- lm(Y ~ ., data = df1)
+  fit0   <- lm(Y ~ ., data = df0)
+  mu1    <- predict(fit1, newdata = as.data.frame(X))
+  mu0    <- predict(fit0, newdata = as.data.frame(X))
+  mu1 - mu0 +
+    (W * (Y - mu1))   / pi_hat -
+    ((1 - W) * (Y - mu0)) / (1 - pi_hat)
+}
+
+# 2) Optimal-weight solver
+compute_lambda <- function(Sigma) {
+  ones     <- rep(1, nrow(Sigma))
+  Sigma_inv <- tryCatch(
+    solve(Sigma),
+    error = function(e) solve(Sigma + diag(1e-10, nrow(Sigma)))
+  )
+  as.vector(Sigma_inv %*% ones / as.numeric(t(ones) %*% Sigma_inv %*% ones))
+}
+
+# 3) HAIPW stacking
+haipw_stack <- function(df, treat_label, outcome, covariates, models) {
+  W      <- as.integer(df$Treatment == treat_label)
+  Y      <- df[[outcome]]
+  X_mat  <- model.matrix(
+    as.formula(paste0("~ ", paste(covariates, collapse = " + "))),
+    data = df
+  )[, -1, drop=FALSE]
+  pi_hat <- mean(W)
+
+  psi_list <- list(
+    aipw = compute_aipw_full(X_mat, Y, W)
+  )
+  for(name in names(models)) {
+    y1 <- models[[name]][1]
+    y0 <- models[[name]][2]
+    psi_list[[name]] <-
+      (W * (Y - df[[y1]])) / pi_hat -
+      ((1 - W) * (Y - df[[y0]])) / (1 - pi_hat) +
+      (df[[y1]] - df[[y0]])
+  }
+
+  all_psi <- do.call(rbind, psi_list)
+  Sigma   <- cov(t(all_psi))
+  lambda  <- compute_lambda(Sigma)
+
+  phi    <- colSums(t(all_psi) * lambda)
+  ate    <- mean(phi)
+  se_ate <- sqrt(as.numeric(t(lambda) %*% Sigma %*% lambda) / nrow(df))
+
+  list(ate = ate, se = se_ate)
+}
+```
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r}
+
+mse_list <- list()
+se_list  <- list()
+
+store_results <- function(trial, beta, se_beta, mse_anc, mse_cf, se_haipw) {
+  mse_list[[trial]] <<- tibble(
+    Trial = trial,
+    Model = c("ANCOVA", "Counterfactual Reg."),
+    MSE   = c(mse_anc, mse_cf)
+  )
+  se_list[[trial]] <<- tibble(
+    Trial     = trial,
+    Estimator = c("ANCOVA β̂", "HAIPW ATE"),
+    SE        = c(se_beta, se_haipw)
+  )
+}
+
+### Trial 19
+### Trial 19
+{
+  df19   <- fread("trial19/trial19.csv")
+  chat19 <- fread("trial19/trial19_chatgpt_potential_outcomes.csv")
+  ds19   <- fread("trial19/trial19_deepseek_potential_outcomes.csv")
+  df19 <- df19 %>%
+    mutate(
+      A = ifelse(Treatment == "Piggyback", 1, 0),
+      Y = YP_FHVP_CVP_GRADIENT
+    ) %>% bind_cols(chat19, ds19)
+
+  covs19 <- c(
+    "X_RECIPIENT_AGE_YEARS_0d","X_RECIPIENT_GENDER_0d",
+    "X_MELD_SCORE_0d","X_CREATININE_0d",
+    "X_DONOR_AGE_YEARS_0d","X_GRAFT_SHARING_0d"
+  )
+  f19       <- as.formula(paste("Y ~ A +", paste(covs19, collapse=" + ")))
+
+  # 1) ANCOVA
+  fit19_anc <- lm(f19, data = df19); s19 <- summary(fit19_anc)
+  beta19    <- s19$coefficients["A","Estimate"]
+  se19      <- s19$coefficients["A","Std. Error"]
+  df19$yhat19_anc <- predict(fit19_anc, df19)
+  mse19_anc <- mean((df19$yhat19_anc - df19$Y)^2)
+
+  # 2) Counterfactual regression
+  df19_cf <- df19 %>% mutate(
+    Z1 = ifelse(A == 0, chatgpt_piggyback, 0),
+    Z0 = ifelse(A == 1, chatgpt_conventional, 0)
+  )
+  fit19_cf    <- lm(update(f19, . ~ . + Z1 + Z0), data = df19_cf)
+  beta19_cf   <- coef(fit19_cf)["A"]
+  df19$yhat19_cf <- predict(fit19_cf, df19_cf)
+  mse19_cf    <- mean((df19$yhat19_cf - df19$Y)^2)
+
+  # 3) HAIPW
+  res19 <- haipw_stack(
+    df19, "Piggyback", "Y", covs19,
+    list(
+      chatgpt = c("chatgpt_piggyback","chatgpt_conventional"),
+      deepseek = c("deepseek_piggyback","deepseek_conventional")
+    )
+  )
+
+  # 4) Random Forest (avoid data.table subsetting)
+  rf_data <- as.data.frame(df19)[, c("Y","A", covs19)]
+  rf_fit   <- randomForest(Y ~ ., data = rf_data)
+  df19$yhat19_rf <- predict(rf_fit, rf_data)
+  mse19_rf <- mean((df19$yhat19_rf - df19$Y)^2)
+
+
+# 5) Bootstrap SE of COUNTERFACTUAL regression ATE (B = 100), skipping failed fits
+B <- 100
+boot_cf_ates <- numeric(0)
+
+while(length(boot_cf_ates) < B) {
+  idx <- sample(nrow(df19), replace = TRUE)
+  bdf <- df19[idx, ]
+  
+  # build counterfactual regressors
+  bdf_cf <- bdf %>%
+    mutate(
+      Z1 = ifelse(A == 0, chatgpt_piggyback, 0),
+      Z0 = ifelse(A == 1, chatgpt_conventional, 0)
+    )
+  
+  # try to fit; if any error (e.g. factor with 1 level), skip
+  fit_attempt <- tryCatch({
+    bfit_cf <- lm(update(f19, . ~ . + Z1 + Z0), data = bdf_cf)
+    coef(bfit_cf)["A"]
+  }, error = function(e) NA)
+  
+  if (!is.na(fit_attempt)) {
+    boot_cf_ates <- c(boot_cf_ates, fit_attempt)
+  }
+}
+
+se19_cf_boot <- sd(boot_cf_ates)
+
+
+  # store ANCOVA, CF, HAIPW
+  store_results("19", beta19, se19, mse19_anc, mse19_cf, res19$se)
+
+  # append Random Forest MSE
+  mse_list[["19"]] <- bind_rows(
+    mse_list[["19"]],
+    tibble(Trial="19", Model="Random Forest", MSE=mse19_rf)
+  )
+  # append CF-bootstrap SE
+  se_list[["19"]] <- bind_rows(
+    se_list[["19"]],
+    tibble(Trial="19", Estimator="CF Bootstrap", SE=se19_cf_boot)
+  )
+}
+
+
+mse_list
+se_list
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

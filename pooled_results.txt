@@ -1,0 +1,14 @@
+% latex table generated in R 4.5.1 by xtable 1.8-4 package
+% Mon Aug  4 15:23:05 2025
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrrrl}
+  \toprule
+Trial & N & ANCOVA & Counterfactual Reg. & Abs.Reduction & Rel.Reduction \\ 
+  \midrule
+2 & 400 & 28.538 & 28.493 & 0.045 & 0.16 \\ 
+   \bottomrule
+\end{tabular}
+\caption{Out-of-Sample Pooled MSE Results
+with Sample Size, Absolute & Relative Reduction} 
+\end{table}

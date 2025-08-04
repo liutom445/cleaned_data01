@@ -1,0 +1,496 @@
+---
+title: "Testing 0729"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(readr)
+library(tidyverse)
+
+# --- ANCOVA across multiple trial datasets ---
+
+# 1) List of trial files
+files <- c(
+  "trial2.csv",
+  "trial4.csv",
+  "trial8.csv",
+  "trial9.csv",
+  "trial19.csv",
+  "trial26.csv"
+)
+
+```
+
+
+
+
+
+```{r}
+# 1. Load libraries
+library(tidyverse)
+library(data.table)
+
+# ———————————————————————————————————————
+# 1) Full‐sample AIPW “influence curve”
+# ———————————————————————————————————————
+compute_aipw_full <- function(X, Y, W) {
+  pi_hat <- mean(W)
+  
+  # Fit on full data
+  df1 <- as.data.frame(cbind(Y = Y[W==1], X[W==1,]))
+  df0 <- as.data.frame(cbind(Y = Y[W==0], X[W==0,]))
+  fit1 <- lm(Y ~ ., data = df1)
+  fit0 <- lm(Y ~ ., data = df0)
+  
+  # Predictions for everyone
+  mu1_hat <- predict(fit1, newdata = as.data.frame(X))
+  mu0_hat <- predict(fit0, newdata = as.data.frame(X))
+  
+  # AIPW‐style influence
+  psi_aipw <- mu1_hat - mu0_hat +
+    (W * (Y - mu1_hat)) / pi_hat -
+    ((1 - W) * (Y - mu0_hat)) / (1 - pi_hat)
+  psi_aipw
+}
+
+# ———————————————————————————————————————
+# 2) Optimal weight solver (unchanged)
+# ———————————————————————————————————————
+compute_lambda <- function(Sigma) {
+  ones     <- rep(1, nrow(Sigma))
+  Sigma_inv <- tryCatch(
+    solve(Sigma),
+    error = function(e) solve(Sigma + diag(1e-6, nrow(Sigma)))
+  )
+  as.vector(Sigma_inv %*% ones / as.numeric(t(ones) %*% Sigma_inv %*% ones))
+}
+
+# ———————————————————————————————————————
+# 3) Main: read files & run HAIPW
+# ———————————————————————————————————————
+haipw_from_files <- function(df_path, chat_path, ds_path) {
+  # Load
+  df   <- fread(df_path)
+  chat <- fread(chat_path)
+  ds   <- fread(ds_path)
+  
+  # Extract Y, treatment, covariates
+  Y <- df$Y
+  W <- df$W
+  X <- model.matrix(
+    ~ X_Age_0d + X_Sex_0d + X_severity_admission_0d,
+    data = df
+  )[,-1]
+  
+  # Potential‐outcome predictions
+  y1 <- cbind(chat$chatgpt_y1, ds$deepseek_y1)
+  y0 <- cbind(chat$chatgpt_y0, ds$deepseek_y0)
+  colnames(y1) <- colnames(y0) <- c("chatgpt","deepseek")
+  
+  # 1) Full‐sample AIPW IC
+  psi_aipw   <- compute_aipw_full(X, Y, W)
+  pi_hat     <- mean(W)
+  
+  # 2) Foundational‐model ICs
+  psi_models <- t(sapply(seq_len(ncol(y1)), function(j) {
+    y1j <- y1[,j]; y0j <- y0[,j]
+    (W * (Y - y1j)) / pi_hat -
+      ((1 - W) * (Y - y0j)) / (1 - pi_hat) +
+      (y1j - y0j)
+  }))
+  
+  # 3) Stack + weight
+  all_psi <- rbind(psi_aipw, psi_models)
+  Sigma   <- cov(t(all_psi))
+  lambda  <- compute_lambda(Sigma)
+  
+  # 4) HAIPW ATE & variance
+  infl    <- colSums(t(all_psi) * lambda)
+  ate     <- mean(infl)
+  var_ate <- as.numeric(t(lambda) %*% Sigma %*% lambda)
+  
+  list(estimate = ate, variance = var_ate, lambda = lambda)
+}
+
+# ———————————————————————————————————————
+# 4) Run & report
+# ———————————————————————————————————————
+res <- haipw_from_files(
+  df_path   = "trial8_df8_all.csv",
+  chat_path = "trial8_chatgpt_potential_outcomes.csv",
+  ds_path   = "trial8_deepseek_potential_outcomes.csv"
+)
+
+cat("HAIPW ATE:          ", round(res$estimate,4), "\n")
+cat("Estimated Variance: ", round(res$variance,4), "\n")
+cat("Lambda weights:     ", paste(round(res$lambda,3), collapse = ", "), "\n")
+sum(res$lambda)  # should be close to 1
+
+cat("Variance from LM:", 
+    summary(lm(Y ~ W + X_Age_0d + X_Sex_0d + X_severity_admission_0d, data = df))$coefficients["W","Std. Error"]^2, 
+    "\n")
+
+```
+
+
+
+
+
+```{r}
+# compare_metrics.R
+
+library(data.table)
+
+# ———————————————————————————————————————
+# 1) HAIPW functions (no folds)
+# ———————————————————————————————————————
+compute_aipw_full <- function(X, Y, W) {
+  pi_hat <- mean(W)
+  df1 <- as.data.frame(cbind(Y = Y[W==1], X[W==1, , drop=FALSE]))
+  df0 <- as.data.frame(cbind(Y = Y[W==0], X[W==0, , drop=FALSE]))
+  fit1 <- lm(Y ~ ., data = df1)
+  fit0 <- lm(Y ~ ., data = df0)
+  mu1 <- predict(fit1, newdata = as.data.frame(X))
+  mu0 <- predict(fit0, newdata = as.data.frame(X))
+  psi <- mu1 - mu0 +
+    (W * (Y - mu1)) / pi_hat -
+    ((1 - W) * (Y - mu0)) / (1 - pi_hat)
+  return(psi)
+}
+
+compute_lambda <- function(Sigma) {
+  ones     <- rep(1, nrow(Sigma))
+  Sigma_inv <- tryCatch(
+    solve(Sigma),
+    error = function(e) solve(Sigma + diag(1e-6, nrow(Sigma)))
+  )
+  as.vector(Sigma_inv %*% ones / as.numeric(t(ones) %*% Sigma_inv %*% ones))
+}
+
+haipw_from_df <- function(df) {
+  # treatment indicator
+  W <- as.integer(df$Treatment=="Piggyback")
+  Y <- df$YP_FHVP_CVP_GRADIENT
+  
+  # covariate matrix (adjust as desired)
+  X <- model.matrix(
+    ~ X_RECIPIENT_AGE_YEARS_0d
+    + X_RECIPIENT_GENDER_0d
+    + X_MELD_SCORE_0d
+    + X_CREATININE_0d
+    + X_DONOR_AGE_YEARS_0d
+    + X_GRAFT_SHARING_0d,
+    data = df
+  )[,-1]
+  
+  # AIPW‐style IC
+  psi_aipw <- compute_aipw_full(X, Y, W)
+  
+  # foundational‐model ICs (ChatGPT & DeepSeek)
+  y1_chat <- df$chatgpt_piggyback
+  y0_chat <- df$chatgpt_conventional
+  psi_chat <- (W * (Y - y1_chat)) / mean(W) -
+    ((1 - W) * (Y - y0_chat)) / (1 - mean(W)) +
+    (y1_chat - y0_chat)
+  
+  y1_ds <- df$deepseek_piggyback
+  y0_ds <- df$deepseek_conventional
+  psi_ds <- (W * (Y - y1_ds)) / mean(W) -
+    ((1 - W) * (Y - y0_ds)) / (1 - mean(W)) +
+    (y1_ds - y0_ds)
+  
+  all_psi <- rbind(psi_aipw, psi_chat, psi_ds)
+  Sigma   <- cov(t(all_psi))
+  lambda  <- compute_lambda(Sigma)
+  
+  # HAIPW ATE
+  phi     <- colSums(t(all_psi) * lambda)
+  ate     <- mean(phi)
+  return(list(ate = ate, lambda = lambda))
+}
+
+# ———————————————————————————————————————
+# 2) Load data + LLM preds
+# ———————————————————————————————————————
+df   <- fread("trial19.csv")
+chat <- fread("trial19_chatgpt_potential_outcomes.csv")
+ds   <- fread("trial19_deepseek_potential_outcomes.csv")
+
+# merge
+df <- cbind(df, chat, ds)
+
+# observed outcome + indicator
+Y <- df$YP_FHVP_CVP_GRADIENT
+W <- as.integer(df$Treatment=="Piggyback")
+
+# covariates for conventional LM
+covs <- c("X_RECIPIENT_AGE_YEARS_0d",
+          "X_RECIPIENT_GENDER_0d",
+          "X_MELD_SCORE_0d",
+          "X_CREATININE_0d",
+          "X_DONOR_AGE_YEARS_0d",
+          "X_GRAFT_SHARING_0d")
+
+# ———————————————————————————————————————
+# 1. Conventional LM & its MSE
+# ———————————————————————————————————————
+fml <- as.formula(paste("YP_FHVP_CVP_GRADIENT ~ Treatment +", paste(covs, collapse = " + ")))
+lm_fit    <- lm(fml, data = df)
+Yhat_lm   <- predict(lm_fit, newdata = df)
+mse_lm    <- mean((Yhat_lm - Y)^2)
+
+# ———————————————————————————————————————
+# 2. LLM predictions MSE
+# ———————————————————————————————————————
+Yhat_chat <- ifelse(W==1, df$chatgpt_piggyback,    df$chatgpt_conventional)
+Yhat_ds   <- ifelse(W==1, df$deepseek_piggyback,   df$deepseek_conventional)
+mse_chat  <- mean((Yhat_chat - Y)^2)
+mse_ds    <- mean((Yhat_ds   - Y)^2)
+
+# ———————————————————————————————————————
+# 3. Counterfactual regression MSE
+#    (using average of ChatGPT & DeepSeek as Y1/Y0)
+# ———————————————————————————————————————
+Y1_avg <- (df$chatgpt_piggyback + df$deepseek_piggyback) / 2
+Y0_avg <- (df$chatgpt_conventional + df$deepseek_conventional) / 2
+Z1     <- W * Y1_avg
+Z0     <- (1 - W) * Y0_avg
+
+df_cf <- cbind(df, Z1 = Z1, Z0 = Z0)
+f_cf  <- update(fml, . ~ . + Z1 + Z0)
+cf_fit   <- lm(f_cf, data = df_cf)
+Yhat_cf  <- predict(cf_fit, newdata = df_cf)
+mse_cf   <- mean((Yhat_cf - Y)^2)
+summary(lm_fit)
+
+# ———————————————————————————————————————
+# 4. HAIPW ATE
+# ———————————————————————————————————————
+haipw_res <- haipw_from_df(df)
+
+# ———————————————————————————————————————
+# 5. Print all four metrics
+# ———————————————————————————————————————
+cat("1) MSE Conventional LM:       ", round(mse_lm, 3), "\n")
+cat("2a) MSE ChatGPT (obs. arm):   ", round(mse_chat,3), "\n")
+cat("2b) MSE DeepSeek (obs. arm):  ", round(mse_ds,  3), "\n")
+cat("3) MSE Counterfactual Reg.:   ", round(mse_cf,  3), "\n")
+cat("4) HAIPW ATE estimate:        ", round(haipw_res$ate, 3), "\n")
+cat("   HAIPW λ-weights:           ", paste(round(haipw_res$lambda,3), collapse=", "), "\n")
+
+```
+
+
+```{r trial26-metrics}
+# Trial 26: Performance Metrics & HAIPW
+library(data.table)
+
+# —————————————————————————————————————————————————————————————
+# Reuse HAIPW helpers (assumes compute_aipw_full & compute_lambda already loaded)
+# —————————————————————————————————————————————————————————————
+haipw_from_df26 <- function(df) {
+  W <- as.integer(df$Treatment=="Reminder module")
+  Y <- df$YP_delta_Adherence_6m
+  X <- model.matrix(
+    ~ X_Agecat_0m + X_Education_0m + X_Ethnicity_0m + X_Socialsupport_0m +
+      X_TB_status_0m + X_OI_index_0m + X_weight_0m + X_CD4_0m +
+      X_viral_load_0m + X_Adherence_0m,
+    data = df
+  )[, -1]
+  
+  psi_aipw <- compute_aipw_full(X, Y, W)
+  
+  psi_chat <- (W * (Y - df$chatgpt_deltaadh_6m_1)) / mean(W) -
+    ((1 - W) * (Y - df$chatgpt_deltaadh_6m_0)) / (1 - mean(W)) +
+    (df$chatgpt_deltaadh_6m_1 - df$chatgpt_deltaadh_6m_0)
+  
+  psi_ds <- (W * (Y - df$deepseek_deltaadh_6m_1)) / mean(W) -
+    ((1 - W) * (Y - df$deepseek_deltaadh_6m_0)) / (1 - mean(W)) +
+    (df$deepseek_deltaadh_6m_1 - df$deepseek_deltaadh_6m_0)
+  
+  all_psi <- rbind(psi_aipw, psi_chat, psi_ds)
+  Sigma   <- cov(t(all_psi))
+  lambda  <- compute_lambda(Sigma)
+  phi     <- colSums(t(all_psi) * lambda)
+  list(ate = mean(phi), lambda = lambda)
+}
+
+df26   <- fread("trial26.csv")
+chat26 <- fread("trial26_chatgpt_potential_adherence.csv")
+ds26   <- fread("trial26_deepseek_potential_adherence.csv")
+df26   <- cbind(df26, chat26, ds26)
+
+
+# 2) 4 Metrics
+# 2.1 Conventional LM MSE
+f26      <- YP_delta_Adherence_6m ~ Treatment + X_Agecat_0m + X_Education_0m +
+               X_Ethnicity_0m + X_Socialsupport_0m + X_TB_status_0m +
+               X_OI_index_0m + X_weight_0m + X_CD4_0m +
+               X_viral_load_0m + X_Adherence_0m
+lm26     <- lm(f26, data = df26)
+mse_lm26 <- mean((predict(lm26, df26) - df26$YP_delta_Adherence_6m)^2)
+
+# 2.2 LLM‐obs‐arm MSEs
+Yhat_chat26 <- ifelse(df26$Treatment=="Reminder module",
+                      df26$chatgpt_deltaadh_6m_1, df26$chatgpt_deltaadh_6m_0)
+Yhat_ds26   <- ifelse(df26$Treatment=="Reminder module",
+                      df26$deepseek_deltaadh_6m_1, df26$deepseek_deltaadh_6m_0)
+mse_chat26  <- mean((Yhat_chat26 - df26$YP_delta_Adherence_6m)^2)
+mse_ds26    <- mean((Yhat_ds26   - df26$YP_delta_Adherence_6m)^2)
+
+# 2.3 Counterfactual regression MSE (avg of LLMs)
+Y1_avg26 <- (df26$chatgpt_deltaadh_6m_1 + df26$deepseek_deltaadh_6m_1) / 2
+Y0_avg26 <- (df26$chatgpt_deltaadh_6m_0 + df26$deepseek_deltaadh_6m_0) / 2
+df26_cf  <- transform(df26,
+                      Z1 = ifelse(Treatment=="Reminder module", Y1_avg26, 0),
+                      Z0 = ifelse(Treatment=="Standard care", Y0_avg26, 0))
+cf26     <- lm(update(f26, . ~ . + Z1 + Z0), data = df26_cf)
+mse_cf26 <- mean((predict(cf26, df26_cf) - df26_cf$YP_delta_Adherence_6m)^2)
+
+# 2.4 HAIPW ATE & λ
+haipw26 <- haipw_from_df26(df26)
+
+# 3) Print results
+cat("Trial 26 – MSE LM:            ", round(mse_lm26,3), "\n")
+cat("Trial 26 – MSE ChatGPT:       ", round(mse_chat26,3), "\n")
+cat("Trial 26 – MSE DeepSeek:      ", round(mse_ds26,3), "\n")
+cat("Trial 26 – MSE CF regression: ", round(mse_cf26,3), "\n")
+cat("Trial 26 – HAIPW ATE:         ", round(haipw26$ate,3), "\n")
+cat("Trial 26 – HAIPW λ weights:   ", paste(round(haipw26$lambda,3), collapse=", "), "\n")
+
+
+```
+```{r trial2-metrics-with-mse}
+# Trial 2: Performance Metrics & HAIPW with MSE
+library(data.table)
+
+# —————————————————————————————————————————————————————————————
+# HAIPW helpers (no folds)
+# —————————————————————————————————————————————————————————————
+compute_aipw_full <- function(X, Y, W) {
+  pi_hat <- mean(W)
+  df1 <- as.data.frame(cbind(Y = Y[W == 1], X[W == 1, , drop = FALSE]))
+  df0 <- as.data.frame(cbind(Y = Y[W == 0], X[W == 0, , drop = FALSE]))
+  fit1 <- lm(Y ~ ., data = df1)
+  fit0 <- lm(Y ~ ., data = df0)
+  mu1 <- predict(fit1, newdata = as.data.frame(X))
+  mu0 <- predict(fit0, newdata = as.data.frame(X))
+  mu1 - mu0 +
+    (W * (Y - mu1)) / pi_hat -
+    ((1 - W) * (Y - mu0)) / (1 - pi_hat)
+}
+
+compute_lambda <- function(Sigma) {
+  ones     <- rep(1, nrow(Sigma))
+  Sigma_inv <- tryCatch(
+    solve(Sigma),
+    error = function(e) solve(Sigma + diag(1e-6, nrow(Sigma)))
+  )
+  as.vector(Sigma_inv %*% ones / as.numeric(t(ones) %*% Sigma_inv %*% ones))
+}
+
+compute_haipw_mse <- function(df, treat_label, outcome, covariates, y1_name, y0_name) {
+  W <- as.integer(df$Treatment == treat_label)
+  Y <- df[[outcome]]
+  X <- model.matrix(
+    as.formula(paste0("~ ", paste(covariates, collapse = " + "))),
+    data = df
+  )[, -1]
+  psi_aipw <- compute_aipw_full(X, Y, W)
+  y1 <- df[[y1_name]]; y0 <- df[[y0_name]]
+  pi  <- mean(W)
+  psi_mod <- (W * (Y - y1)) / pi -
+             ((1 - W) * (Y - y0)) / (1 - pi) +
+             (y1 - y0)
+  all_psi <- rbind(psi_aipw, psi_mod)
+  Sigma   <- cov(t(all_psi))
+  lambda  <- compute_lambda(Sigma)
+  as.numeric(t(lambda) %*% Sigma %*% lambda)
+}
+
+# —————————————————————————————————————————————————————————————
+# 1) Load data & merge LLM preds
+# —————————————————————————————————————————————————————————————
+df2   <- fread("trial2.csv")
+chat2 <- fread("trial2_chatgpt_potential_outcomes.csv")
+ds2   <- fread("trial2_deepseek_potential_outcomes.csv")
+df2   <- cbind(df2, chat2, ds2)
+
+# —————————————————————————————————————————————————————————————
+# 2) Conventional LM & its MSE
+# —————————————————————————————————————————————————————————————
+f2      <- YP_recovery_time ~ Treatment + X_agegrp_0d + X_sex_0d + X_fever_0d +
+             X_cough_0d + X_respdiff_0d + X_comorb_0d + X_diabetes_0d + X_hyperten_0d
+lm2     <- lm(f2, data = df2)
+mse_lm2 <- mean((predict(lm2, df2) - df2$YP_recovery_time)^2)
+
+# —————————————————————————————————————————————————————————————
+# 3) LLM‑observed‐arm MSEs
+# —————————————————————————————————————————————————————————————
+Yhat_chat2 <- ifelse(df2$Treatment=="Ivermectin+Doxycycline",
+                     df2$chatgpt_y1, df2$chatgpt_y0)
+Yhat_ds2   <- ifelse(df2$Treatment=="Ivermectin+Doxycycline",
+                     df2$deepseek_y1, df2$deepseek_y0)
+mse_chat2  <- mean((Yhat_chat2 - df2$YP_recovery_time)^2)
+mse_ds2    <- mean((Yhat_ds2   - df2$YP_recovery_time)^2)
+
+# —————————————————————————————————————————————————————————————
+# 4) Counterfactual regression MSE (avg of two LLMs)
+# —————————————————————————————————————————————————————————————
+Y1_avg2   <- (df2$chatgpt_y1 + df2$deepseek_y1) / 2
+Y0_avg2   <- (df2$chatgpt_y0 + df2$deepseek_y0) / 2
+df2_cf    <- transform(df2,
+                       Z1 = ifelse(Treatment=="Ivermectin+Doxycycline", Y1_avg2, 0),
+                       Z0 = ifelse(Treatment=="Placebo", Y0_avg2, 0))
+cf2       <- lm(update(f2, . ~ . + Z1 + Z0), data = df2_cf)
+mse_cf2   <- mean((predict(cf2, df2_cf) - df2_cf$YP_recovery_time)^2)
+
+# —————————————————————————————————————————————————————————————
+# 5) HAIPW ATE & λ
+# —————————————————————————————————————————————————————————————
+haipw2 <- (function(df) {
+  W <- as.integer(df$Treatment=="Ivermectin+Doxycycline")
+  Y <- df$YP_recovery_time
+  X <- model.matrix(f2, data = df)[, -1]
+  psi_aipw <- compute_aipw_full(X, Y, W)
+  psi_chat <- (W * (Y - df$chatgpt_y1)) / mean(W) -
+    ((1 - W) * (Y - df$chatgpt_y0)) / (1 - mean(W)) +
+    (df$chatgpt_y1 - df$chatgpt_y0)
+  psi_ds <- (W * (Y - df$deepseek_y1)) / mean(W) -
+    ((1 - W) * (Y - df$deepseek_y0)) / (1 - mean(W)) +
+    (df$deepseek_y1 - df$deepseek_y0)
+  all_psi <- rbind(psi_aipw, psi_chat, psi_ds)
+  Sigma   <- cov(t(all_psi))
+  lambda  <- compute_lambda(Sigma)
+  phi     <- colSums(t(all_psi) * lambda)
+  list(ate = mean(phi), lambda = lambda)
+})(df2)
+
+# —————————————————————————————————————————————————————————————
+# 6) HAIPW “MSE” (estimated variance)
+# —————————————————————————————————————————————————————————————
+covs2 <- c("X_agegrp_0d","X_sex_0d","X_fever_0d","X_cough_0d",
+           "X_respdiff_0d","X_comorb_0d","X_diabetes_0d","X_hyperten_0d")
+mse_haipw2 <- compute_haipw_mse(
+  df         = df2,
+  treat_label= "Ivermectin+Doxycycline",
+  outcome    = "YP_recovery_time",
+  covariates = covs2,
+  y1_name    = "chatgpt_y1",
+  y0_name    = "chatgpt_y0"
+)
+
+# —————————————————————————————————————————————————————————————
+# 7) Print all metrics
+# —————————————————————————————————————————————————————————————
+cat("MSE LM:            ", round(mse_lm2,3), "\n")
+cat("MSE ChatGPT:       ", round(mse_chat2,3), "\n")
+cat("MSE DeepSeek:      ", round(mse_ds2,3), "\n")
+cat("MSE CF regression: ", round(mse_cf2,3), "\n")
+cat("HAIPW ATE:         ", round(haipw2$ate,3), "\n")
+cat("HAIPW λ weights:   ", paste(round(haipw2$lambda,3), collapse=", "), "\n")
+cat("HAIPW MSE (var):   ", round(mse_haipw2,3), "\n")
+```
+
+
