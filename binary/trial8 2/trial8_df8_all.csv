@@ -1,0 +1,104 @@
+W,Y,X_Age_0d,X_Sex_0d,X_comorbidities_0d,X_severity_admission_0d
+0,0,35,male,NA,mild
+1,1,58,male,"T2DM, Hepatitis C",mild
+0,0,60,male,HTN,mild
+1,1,55,male,T2DM,mild
+0,1,50,male,"HTN, T2DM",mild
+0,0,39,male,NA,mild
+1,1,62,female,"HTN, T2DM",mild
+1,1,30,female,NA,mild
+1,1,20,male,NA,mild
+0,0,51,female,HTN,mild
+0,0,43,female,HTN,mild
+0,0,57,male,T2DM,mild
+0,0,46,male,"HTN,IHD",mild
+1,1,40,male,NA,mild
+1,1,60,male,"HTN, T2DM",moderate
+1,0,52,male,Tuberculosis,moderate
+1,0,72,male,NA,mild
+1,0,32,male,NA,mild
+1,0,75,male,NA,mild
+1,0,70,female,NA,mild
+0,0,28,male,NA,moderate
+1,0,68,female,"AF, CCF With IHD, Minimal Renal Dysfunction",moderate
+0,0,61,male,T2DM,mild
+0,0,49,female,"T2DM, Valvular HD, CCF",moderate
+0,0,40,male,Newly Diagnosed T2DM,moderate
+0,1,50,female,"T2DM, CaGB",mild
+1,0,36,male,NA,mild
+0,0,70,male,post AVR,mild
+1,0,71,male,"T2DM, HTN",mild
+0,0,54,male,"Asthma, T2DM",moderate
+1,1,55,female,"T2DM, HTN",moderate
+1,0,76,male,"T2DM, HTN",mild
+1,0,45,male,"T2DM, HIV positive",mild
+0,0,60,male,NA,mild
+0,0,55,female,"Hypothyroidism, HTN",mild
+0,1,52,male,NA,mild
+0,0,45,male,hypothyroidism,mild
+1,0,44,female,Uterine cancer,mild
+1,0,76,male,HTN,mild
+0,1,68,female,"HTN, T2DM",mild
+0,0,42,female,Acute Leukemia,mild
+0,0,52,male,Not known comorbities,moderate
+0,0,24,male,HTN newly diagnosed,mild
+1,0,65,male,"HTN, IHD",moderate
+1,1,50,male,HTN,mild
+0,0,47,female,"T2DM,HTN, Hyperuricemia, Hypercholesterolemia",mild
+1,0,65,female,cholecystitis,mild
+0,0,59,male,T2DM,mild
+1,0,57,female,"HTN,T2DM",moderate
+1,0,54,male,"T2DM, Severe anemia,newly diagnosed MM, CKD",mild
+1,0,49,female,"HTN, T2DM newly diagnosed",mild
+0,0,56,male,"HTN, DM, AKI",moderate
+0,1,72,male,"CAD,HTN",moderate
+0,0,68,male,NA,moderate
+1,0,58,female,Rheumatoid Arthritis,mild
+1,0,68,female,"HTN, PSVT",mild
+0,0,51,male,NA,mild
+1,0,83,male,T2DM,mild
+0,0,46,male,HTN,mild
+0,0,60,male,NA,mild
+1,0,41,male,NA,mild
+1,0,60,female,DM,mild
+1,0,71,male,NA,mild
+0,1,35,male,NA,mild
+0,0,45,female,Left Pleural effusion under evaluation,mild
+1,1,53,female,"HTN, DM",mild
+0,0,75,male,"HTN, DM, ca cervix",moderate
+0,0,48,female,hypothyroidism,mild
+1,0,22,male,NA,mild
+1,0,28,female,NA,mild
+1,0,70,male,HTN,mild
+0,0,52,male,"HTN, T2DM",mild
+1,0,35,male,NA,mild
+1,0,55,male,"HTN, IHD",mild
+0,0,45,male,NA,mild
+1,0,24,male,NA,mild
+0,0,40,male,NA,mild
+0,0,71,male,"HTN, T2DM",mild
+0,0,60,female,HTN,moderate
+0,0,45,male,NA,mild
+0,0,45,male,NA,mild
+1,0,55,male,"IHD, AKI",mild
+1,0,65,male,T2DM,mild
+1,0,70,male,T2DM,moderate
+0,0,33,male,NA,mild
+0,0,61,female,DM,mild
+1,0,39,male,T2DM,moderate
+1,0,38,male,hypothyroidism,mild
+0,0,50,female,nil,mild
+1,0,27,male,nil,moderate
+1,0,40,male,HTN,moderate
+1,0,61,male,"Hypothyroidism, Post CA thyroid",mild
+0,0,78,male,"HTN, DM, IHD",mild
+1,0,67,male,"DM, IHD",mild
+1,0,65,male,"T2DM, HTN",mild
+0,0,53,female,"T2DM, HTN",mild
+1,0,34,male,"Multiple myeloma, CKD",mild
+0,0,18,female,nil,mild
+1,0,55,male,IHD,mild
+1,0,60,female,IHD,mild
+1,0,30,male,NA,mild
+0,0,40,male,Hypertension,moderate
+1,0,66,male,Hypertension,mild
