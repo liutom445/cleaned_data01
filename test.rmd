@@ -1394,32 +1394,3 @@ print(
 )
 ```
 
-```{r}
-# 9) Plot ATE estimates with ±1 SE
-ggplot(ate_tab, aes(x = TrialName, y = Estimate, color = Estimator)) +
-  geom_point(position = position_dodge(width = 0.7), size = 3) +
-  geom_errorbar(aes(ymin = Estimate - Std_Error,
-                    ymax = Estimate + Std_Error),
-                position = position_dodge(width = 0.7), width = 0.2) +
-  labs(x = "Trial", y = "ATE Estimate",
-       title = "Treatment Effect Estimates with ±1 SE") +
-  theme_minimal()
-
-# 10) Plot SE trends by method
-se_long <- se_tab %>%
-  pivot_longer(
-    cols      = c(ANCOVA_SE, HAIPW_SE, CF_SE_Boot),
-    names_to  = "Method",
-    values_to = "SE"
-  ) %>%
-  left_join(meta, by="Trial")
-
-ggplot(se_long, aes(x = TrialName, y = SE, group = Method, color = Method)) +
-  geom_line() +
-  geom_point(size = 2) +
-  labs(x = "Trial", y = "Standard Error",
-       title = "SE by Method Across Trials") +
-  theme_minimal()
-
-```
-

@@ -353,387 +353,1407 @@ display: none;
 </div>
 
 
-<div id="function-definitions" class="section level2">
-<h2>Function Definitions</h2>
-<pre class="r"><code># 1) Full-sample AIPW influence curve
-compute_aipw_full &lt;- function(X, Y, W) {
-  pi_hat &lt;- mean(W)
-  df1    &lt;- as.data.frame(cbind(Y = Y[W==1],  X = X[W==1, , drop=FALSE]))
-  df0    &lt;- as.data.frame(cbind(Y = Y[W==0],  X = X[W==0, , drop=FALSE]))
-  fit1   &lt;- lm(Y ~ ., data = df1)
-  fit0   &lt;- lm(Y ~ ., data = df0)
-  mu1    &lt;- predict(fit1, newdata = as.data.frame(X))
-  mu0    &lt;- predict(fit0, newdata = as.data.frame(X))
-  mu1 - mu0 +
-    (W * (Y - mu1))   / pi_hat -
-    ((1 - W) * (Y - mu0)) / (1 - pi_hat)
-}
-
-# 2) Optimal-weight solver
-compute_lambda &lt;- function(Sigma) {
-  ones     &lt;- rep(1, nrow(Sigma))
-  Sigma_inv &lt;- tryCatch(
-    solve(Sigma),
-    error = function(e) solve(Sigma + diag(1e-10, nrow(Sigma)))
+<pre class="r"><code># trial2_full_analysis.R
+# 0) Read data + original &amp; updated CF files + Deepseek
+df2       &lt;- fread(&quot;trial2/trial2.csv&quot;) %&gt;%
+  mutate(
+    A = ifelse(Treatment == &quot;Ivermectin+Doxycycline&quot;, 1, 0),
+    Y = YP_recovery_time
   )
-  as.vector(Sigma_inv %*% ones / as.numeric(t(ones) %*% Sigma_inv %*% ones))
-}
+chat_orig &lt;- fread(&quot;trial2/trial2_chatgpt_potential_outcomes.csv&quot;)
+chat_upd  &lt;- fread(&quot;trial2/trial2_counterfactuals_updated.csv&quot;)
+ds2       &lt;- fread(&quot;trial2/trial2_deepseek_potential_outcomes.csv&quot;)
+
+df2 &lt;- bind_cols(df2, chat_orig, chat_upd, ds2)
+
+covs2 &lt;- c(
+  &quot;X_agegrp_0d&quot;,&quot;X_sex_0d&quot;,&quot;X_fever_0d&quot;,&quot;X_cough_0d&quot;,
+  &quot;X_respdiff_0d&quot;,&quot;X_comorb_0d&quot;,&quot;X_diabetes_0d&quot;,&quot;X_hyperten_0d&quot;
+)
+f2 &lt;- as.formula(paste(&quot;Y ~ A +&quot;, paste(covs2, collapse = &quot; + &quot;)))
+
+# 1) ANCOVA
+fit2_anc &lt;- lm(f2, data = df2)
+s2       &lt;- summary(fit2_anc)
+beta2    &lt;- s2$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
+se2      &lt;- s2$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
+df2$yhat_anc &lt;- predict(fit2_anc, df2)
+mse2_anc &lt;- mean((df2$yhat_anc - df2$Y)^2)
+
+# 2) CF‐regression (in‐sample MSE + point‐estimate)
+df2_cf &lt;- df2 %&gt;%
+  mutate(
+    Z1 = ifelse(A == 0, chatgpt_cf_recovery_time, 0),
+    Z0 = ifelse(A == 1, chatgpt_cf_recovery_time, 0)
+  )
+fit2_cf   &lt;- lm(update(f2, . ~ . + Z1 + Z0), data = df2_cf)
+df2$yhat_cf &lt;- predict(fit2_cf, df2_cf)
+mse2_cf   &lt;- mean((df2$yhat_cf - df2$Y)^2)
+
+# Correct CF‐ATE
+coefs_cf &lt;- coef(fit2_cf)
+m1_cf    &lt;- mean(df2_cf$Z1[df2_cf$A == 0])
+m0_cf    &lt;- mean(df2_cf$Z0[df2_cf$A == 1])
+ate2_cf  &lt;- coefs_cf[&quot;A&quot;] +
+            coefs_cf[&quot;Z1&quot;] * m1_cf -
+            coefs_cf[&quot;Z0&quot;] * m0_cf
 
 # 3) HAIPW stacking
-haipw_stack &lt;- function(df, treat_label, outcome, covariates, models) {
-  W      &lt;- as.integer(df$Treatment == treat_label)
-  Y      &lt;- df[[outcome]]
-  X_mat  &lt;- model.matrix(
-    as.formula(paste0(&quot;~ &quot;, paste(covariates, collapse = &quot; + &quot;))),
-    data = df
-  )[, -1, drop=FALSE]
-  pi_hat &lt;- mean(W)
-
-  psi_list &lt;- list(
-    aipw = compute_aipw_full(X_mat, Y, W)
+res2 &lt;- haipw_stack(
+  df2,
+  &quot;Ivermectin+Doxycycline&quot;,
+  &quot;Y&quot;,
+  covs2,
+  list(
+    chatgpt = c(&quot;chatgpt_y1&quot;,&quot;chatgpt_y0&quot;),
+    deepseek = c(&quot;deepseek_y1&quot;,&quot;deepseek_y0&quot;)
   )
-  for(name in names(models)) {
-    y1 &lt;- models[[name]][1]
-    y0 &lt;- models[[name]][2]
-    psi_list[[name]] &lt;-
-      (W * (Y - df[[y1]])) / pi_hat -
-      ((1 - W) * (Y - df[[y0]])) / (1 - pi_hat) +
-      (df[[y1]] - df[[y0]])
-  }
+)
 
-  all_psi &lt;- do.call(rbind, psi_list)
-  Sigma   &lt;- cov(t(all_psi))
-  lambda  &lt;- compute_lambda(Sigma)
+# 4) Random Forest — OOB MSE
+fit2_rf     &lt;- ranger(f2, data = df2, num.trees = 500,
+                      respect.unordered.factors = &quot;order&quot;,
+                      seed = 2025)
+oob_mse2_rf &lt;- fit2_rf$prediction.error
 
-  phi    &lt;- colSums(t(all_psi) * lambda)
-  ate    &lt;- mean(phi)
-  se_ate &lt;- sqrt(as.numeric(t(lambda) %*% Sigma %*% lambda) / nrow(df))
-
-  list(ate = ate, se = se_ate)
-}</code></pre>
-</div>
-<div id="analysis-by-trial" class="section level2">
-<h2>Analysis by Trial</h2>
-<pre class="r"><code># Prepare storage
-mse_list &lt;- list()
-se_list  &lt;- list()
-
-store_results &lt;- function(trial, beta, se_beta, mse_anc, mse_cf, se_haipw) {
-  mse_list[[trial]] &lt;&lt;- tibble(
-    Trial = trial,
-    Model = c(&quot;ANCOVA&quot;, &quot;Counterfactual Reg.&quot;),
-    MSE   = c(mse_anc, mse_cf)
-  )
-  se_list[[trial]] &lt;&lt;- tibble(
-    Trial     = trial,
-    Estimator = c(&quot;ANCOVA β̂&quot;, &quot;HAIPW ATE&quot;),
-    SE        = c(se_beta, se_haipw)
-  )
+# 5) Bootstrap SE of CF‐regression ATE
+B             &lt;- 500
+boot_cf_ates2 &lt;- numeric(0)
+while(length(boot_cf_ates2) &lt; B) {
+  idx    &lt;- sample(nrow(df2_cf), replace = TRUE)
+  bdf_cf &lt;- df2_cf[idx, ]
+  fit_b  &lt;- lm(update(f2, . ~ . + Z1 + Z0), data = bdf_cf)
+  coefs  &lt;- coef(fit_b)
+  cf_try &lt;- coefs[&quot;A&quot;] +
+            coefs[&quot;Z1&quot;] * mean(bdf_cf$Z1[bdf_cf$A==0]) -
+            coefs[&quot;Z0&quot;] * mean(bdf_cf$Z0[bdf_cf$A==1])
+  if(!is.na(cf_try)) boot_cf_ates2 &lt;- c(boot_cf_ates2, cf_try)
 }
+se2_cf_boot &lt;- sd(boot_cf_ates2)
 
-### Trial 2
-{
-  df2   &lt;- fread(&quot;trial2/trial2.csv&quot;)
-  chat2 &lt;- fread(&quot;trial2/trial2_chatgpt_potential_outcomes.csv&quot;)
-  ds2   &lt;- fread(&quot;trial2/trial2_deepseek_potential_outcomes.csv&quot;)
-  df2 &lt;- df2 %&gt;%
-    mutate(
-      A = ifelse(Treatment == &quot;Ivermectin+Doxycycline&quot;, 1, 0),
-      Y = YP_recovery_time
-    ) %&gt;%
-    bind_cols(chat2, ds2)
-  covs2 &lt;- c(
-    &quot;X_agegrp_0d&quot;,&quot;X_sex_0d&quot;,&quot;X_fever_0d&quot;,&quot;X_cough_0d&quot;,
-    &quot;X_respdiff_0d&quot;,&quot;X_comorb_0d&quot;,&quot;X_diabetes_0d&quot;,&quot;X_hyperten_0d&quot;
-  )
-  f2       &lt;- as.formula(paste(&quot;Y ~ A +&quot;, paste(covs2, collapse = &quot; + &quot;)))
-  fit2_anc &lt;- lm(f2, data = df2)
-  s2       &lt;- summary(fit2_anc)
-  beta2    &lt;- s2$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
-  se2      &lt;- s2$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
-  df2$yhat_anc &lt;- predict(fit2_anc, df2)
-  mse2_anc &lt;- mean((df2$yhat_anc - df2$Y)^2)
-  # CF
-  df2 &lt;- df2 %&gt;%
-    mutate(
-      Z1 = ifelse(A == 0, chatgpt_y1, 0),
-      Z0 = ifelse(A == 1, chatgpt_y0, 0)
-    )
-  fit2_cf   &lt;- lm(update(f2, . ~ . + Z1 + Z0), data = df2)
-  df2$yhat_cf &lt;- predict(fit2_cf, df2)
-  mse2_cf   &lt;- mean((df2$yhat_cf - df2$Y)^2)
-  # HAIPW
-  res2 &lt;- haipw_stack(
-    df2, &quot;Ivermectin+Doxycycline&quot;, &quot;Y&quot;, covs2,
-    list(
-      chatgpt = c(&quot;chatgpt_y1&quot;,&quot;chatgpt_y0&quot;),
-      deepseek = c(&quot;deepseek_y1&quot;,&quot;deepseek_y0&quot;)
-    )
-  )
-  store_results(&quot;2&quot;, beta2, se2, mse2_anc, mse2_cf, res2$se)
-}
+# 6) Store results (new signature)
+store_results(
+  &quot;2&quot;,
+  beta2,      se2,           # ANCOVA
+  res2$ate,   res2$se,       # HAIPW ATE
+  ate2_cf,    se2_cf_boot,   # CF‐regression ATE
+  mse2_anc,   mse2_cf,       # in‐sample MSE’s
+  oob_mse2_rf                # RF OOB‐MSE
+)
 
-### Trial 4
-{
-  df4 &lt;- fread(&quot;trial4/trial4_counterfactuals.csv&quot;) %&gt;%
-    mutate(
-      A = ifelse(Treatment == &quot;VD&quot;, 1, 0),
-      Y = YP_delta_P3NP_6w
-    )
-  covs4 &lt;- c(
-    &quot;X_Sex_0w&quot;,&quot;X_Age_0w&quot;,&quot;X_BMI_0w&quot;,&quot;X_FIB4_0w&quot;,
-    &quot;X_APRI_0w&quot;,&quot;X_VD_0w&quot;,&quot;X_AST_0w&quot;,&quot;X_ALT_0w&quot;,
-    &quot;X_Plt_0w&quot;,&quot;X_TGF_0w&quot;,&quot;X_TIMP_0w&quot;,&quot;X_MMP_0w&quot;,&quot;X_P3NP_0w&quot;
+# 7) Quick summary
+cat(&quot;SE(ANCOVA):           &quot;, round(se2,         3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(ANCOVA):            0.549</code></pre>
+<pre class="r"><code>cat(&quot;SE(HAIPW stacking):    &quot;, round(res2$se,     3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(HAIPW stacking):     0.535</code></pre>
+<pre class="r"><code>cat(&quot;SE(CF regression):     &quot;, round(se2_cf_boot, 3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(CF regression):      0.757</code></pre>
+<pre class="r"><code># trial4_full_analysis.R
+
+# 0) Load base data and counterfactual predictions
+df4_base &lt;- fread(&quot;trial4/trial4.csv&quot;) %&gt;%
+  mutate(
+    A = ifelse(Treatment == &quot;VD&quot;, 1, 0),
+    Y = YP_delta_P3NP_6w
   )
-  f4       &lt;- as.formula(paste(&quot;Y ~ A +&quot;, paste(covs4, collapse = &quot; + &quot;)))
-  fit4_anc &lt;- lm(f4, data = df4)
-  s4       &lt;- summary(fit4_anc)
-  beta4    &lt;- s4$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
-  se4      &lt;- s4$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
-  df4$yhat_anc &lt;- predict(fit4_anc, df4)
-  mse4_anc &lt;- mean((df4$yhat_anc - df4$Y)^2)
-  # CF
-  df4 &lt;- df4 %&gt;%
-    mutate(
-      Z1 = ifelse(A == 0, chatgpt_cf_VitD2, 0),
-      Z0 = ifelse(A == 1, chatgpt_cf_Placebo, 0)
-    )
-  fit4_cf   &lt;- lm(update(f4, . ~ . + Z1 + Z0), data = df4)
-  df4$yhat_cf &lt;- predict(fit4_cf, df4)
-  mse4_cf   &lt;- mean((df4$yhat_cf - df4$Y)^2)
-  # HAIPW
-  res4 &lt;- haipw_stack(
-    df4, &quot;VD&quot;, &quot;Y&quot;, covs4,
-    list(
-      chatgpt = c(&quot;chatgpt_cf_VitD2&quot;,&quot;chatgpt_cf_Placebo&quot;),
-      deepseek = c(&quot;deepseek_cf_VitD2&quot;,&quot;deepseek_cf_Placebo&quot;)
-    )
+chat_upd       &lt;- fread(&quot;trial4/trial4_cf_counterfactuals_updated.csv&quot;)
+orig_cf        &lt;- fread(&quot;trial4/trial4_cf.csv&quot;)
+deepseek_cols  &lt;- orig_cf %&gt;% select(deepseek_cf_VitD2, deepseek_cf_Placebo)
+df4            &lt;- bind_cols(df4_base, chat_upd, deepseek_cols)
+
+# 1) Covariates &amp; formula
+covs4 &lt;- c(
+  &quot;X_Sex_0w&quot;,&quot;X_Age_0w&quot;,&quot;X_BMI_0w&quot;,&quot;X_FIB4_0w&quot;,
+  &quot;X_APRI_0w&quot;,&quot;X_VD_0w&quot;,&quot;X_AST_0w&quot;,&quot;X_ALT_0w&quot;,
+  &quot;X_Plt_0w&quot;,&quot;X_TGF_0w&quot;,&quot;X_TIMP_0w&quot;,&quot;X_MMP_0w&quot;,&quot;X_P3NP_0w&quot;
+)
+f4 &lt;- as.formula(paste(&quot;Y ~ A +&quot;, paste(covs4, collapse = &quot; + &quot;)))
+
+# 2) ANCOVA
+fit4_anc     &lt;- lm(f4, data = df4)
+s4           &lt;- summary(fit4_anc)
+beta4        &lt;- s4$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
+se4          &lt;- s4$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
+df4$yhat_anc &lt;- predict(fit4_anc, df4)
+mse4_anc     &lt;- mean((df4$yhat_anc - df4$Y)^2)
+
+# 3) Counterfactual regression
+df4_cf &lt;- df4 %&gt;%
+  mutate(
+    Z1 = ifelse(A == 0, chatgpt_cf_P3NP_6w, 0),
+    Z0 = ifelse(A == 1, chatgpt_cf_P3NP_6w, 0)
   )
-  store_results(&quot;4&quot;, beta4, se4, mse4_anc, mse4_cf, res4$se)
-}</code></pre>
+fit4_cf     &lt;- lm(update(f4, . ~ . + Z1 + Z0), data = df4_cf)
+df4$yhat_cf &lt;- predict(fit4_cf, df4_cf)
+mse4_cf     &lt;- mean((df4$yhat_cf - df4$Y)^2)
+
+# → Correct CF‐ATE using group‐specific means
+coefs_cf4 &lt;- coef(fit4_cf)
+m1_cf4    &lt;- mean(df4_cf$Z1[df4_cf$A == 0])
+m0_cf4    &lt;- mean(df4_cf$Z0[df4_cf$A == 1])
+ate4_cf   &lt;- coefs_cf4[&quot;A&quot;] +
+             coefs_cf4[&quot;Z1&quot;] * m1_cf4 -
+             coefs_cf4[&quot;Z0&quot;] * m0_cf4
+
+# 4) HAIPW stacking
+res4 &lt;- haipw_stack(
+  df4, &quot;VD&quot;, &quot;Y&quot;, covs4,
+  list(
+    chatgpt  = c(&quot;chatgpt_cf_VitD2&quot;,  &quot;chatgpt_cf_Placebo&quot;),
+    deepseek = c(&quot;deepseek_cf_VitD2&quot;, &quot;deepseek_cf_Placebo&quot;)
+  )
+)</code></pre>
 <pre><code>## Warning in predict.lm(fit1, newdata = as.data.frame(X)): prediction from
 ## rank-deficient fit; attr(*, &quot;non-estim&quot;) has doubtful cases</code></pre>
-<pre class="r"><code>### Trial 6
-{
-  cf6 &lt;- fread(&quot;trial6/trial6_counterfactuals.csv&quot;) %&gt;%
-    mutate(
-      W = ifelse(Treatment == &quot;Sitagliptin&quot;, 1, 0),
-      Y = YP_delta_CCA_IMT_24m
-    ) %&gt;% drop_na()
-  covs6 &lt;- grep(&quot;_0m$&quot;, names(cf6), value = TRUE)
-  f6 &lt;- if(length(covs6)&gt;0) as.formula(paste(&quot;Y ~ W +&quot;, paste(covs6,collapse=&quot; + &quot;))) else as.formula(&quot;Y ~ W&quot;)
-  fit6_anc &lt;- lm(f6, data = cf6); s6 &lt;- summary(fit6_anc)
-  beta6    &lt;- s6$coefficients[&quot;W&quot;,&quot;Estimate&quot;]
-  se6      &lt;- s6$coefficients[&quot;W&quot;,&quot;Std. Error&quot;]
-  cf6$yhat6_anc &lt;- predict(fit6_anc, cf6)
-  mse6_anc &lt;- mean((cf6$yhat6_anc - cf6$Y)^2)
-  # CF
-  cf6_cf &lt;- cf6 %&gt;% mutate(
-    Z1 = ifelse(W == 0, chat_sitagliptin_delta, 0),
-    Z0 = ifelse(W == 1, chat_conventional_delta, 0)
+<pre class="r"><code># 5) Random Forest — OOB MSE
+fit4_rf     &lt;- ranger(f4, data = df4, num.trees = 500,
+                      respect.unordered.factors = &quot;order&quot;,
+                      seed = 2025)
+oob_mse4_rf &lt;- fit4_rf$prediction.error
+
+# 6) Bootstrap SE of CF‐regression ATE (B = 500)
+B          &lt;- 500
+boot_cf4   &lt;- numeric(0)
+while(length(boot_cf4) &lt; B) {
+  idx    &lt;- sample(nrow(df4_cf), replace = TRUE)
+  bdf_cf &lt;- df4_cf[idx, ]
+  fit_b  &lt;- lm(update(f4, . ~ . + Z1 + Z0), data = bdf_cf)
+  coefs  &lt;- coef(fit_b)
+  cf_try &lt;- coefs[&quot;A&quot;] +
+            coefs[&quot;Z1&quot;] * mean(bdf_cf$Z1[bdf_cf$A==0]) -
+            coefs[&quot;Z0&quot;] * mean(bdf_cf$Z0[bdf_cf$A==1])
+  if(!is.na(cf_try)) boot_cf4 &lt;- c(boot_cf4, cf_try)
+}
+se4_cf_boot &lt;- sd(boot_cf4)
+
+# 7) Store results (now includes CF ATE &amp; SE)
+store_results(
+  &quot;4&quot;,
+  beta4,      se4,          # ANCOVA
+  res4$ate,   res4$se,      # HAIPW
+  ate4_cf,    se4_cf_boot,  # CF regression
+  mse4_anc,   mse4_cf,      # MSEs
+  oob_mse4_rf                  # RF OOB‐MSE
+)
+
+# 8) Quick summary of SE’s
+cat(&quot;SE(ANCOVA):          &quot;, round(se4,         3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(ANCOVA):           1.11</code></pre>
+<pre class="r"><code>cat(&quot;SE(HAIPW stacking):   &quot;, round(res4$se,     3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(HAIPW stacking):    1.001</code></pre>
+<pre class="r"><code>cat(&quot;SE(CF regression):    &quot;, round(se4_cf_boot, 3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(CF regression):     1.161</code></pre>
+<pre class="r"><code># trial6_full_analysis.R
+
+# 0) Load original &amp; updated counterfactual files only
+orig_cf6 &lt;- fread(&quot;trial6/trial6_counterfactuals.csv&quot;)
+upd_cf6  &lt;- fread(&quot;trial6/trial6_counterfactuals_updated.csv&quot;) %&gt;%
+  rename(chat_cf_delta = names(.)[1])
+
+# 1) Combine and define W &amp; Y; drop missing
+df6 &lt;- bind_cols(orig_cf6, upd_cf6) %&gt;%
+  mutate(
+    W = ifelse(Treatment == &quot;Sitagliptin&quot;, 1, 0),
+    Y = YP_delta_CCA_IMT_24m
+  ) %&gt;%
+  filter(!is.na(W), !is.na(Y))
+
+# 2) Baseline covariates
+covs6 &lt;- grep(&quot;_0m$&quot;, names(df6), value = TRUE)
+
+# 3) Impute missing covariates
+num_covs6 &lt;- df6 %&gt;% select(all_of(covs6)) %&gt;% select(where(is.numeric)) %&gt;% names()
+cat_covs6 &lt;- setdiff(covs6, num_covs6)
+
+df6 &lt;- df6 %&gt;%
+  mutate(across(all_of(num_covs6),
+                ~ ifelse(is.na(.), median(., na.rm = TRUE), .))) %&gt;%
+  mutate(across(all_of(cat_covs6),
+                ~ replace(., is.na(.),
+                          names(sort(table(.[!is.na(.)]), decreasing = TRUE))[1])))
+
+# 4) Reconstruct both‐arm ChatGPT CFs for HAIPW
+df6 &lt;- df6 %&gt;%
+  mutate(
+    chatgpt_y1 = ifelse(W == 0, chat_cf_delta, Y),
+    chatgpt_y0 = ifelse(W == 1, chat_cf_delta, Y)
   )
-  fit6_cf   &lt;- lm(update(f6, . ~ . + Z1 + Z0), data = cf6_cf)
-  cf6$yhat6_cf &lt;- predict(fit6_cf, cf6_cf)
-  mse6_cf   &lt;- mean((cf6$yhat6_cf - cf6$Y)^2)
-  # HAIPW
-  res6 &lt;- haipw_stack(
-    cf6, &quot;Sitagliptin&quot;, &quot;Y&quot;, covs6,
-    list(
-      chatgpt = c(&quot;chat_sitagliptin_delta&quot;,&quot;chat_conventional_delta&quot;),
-      deepseek = c(&quot;ds_sitagliptin_delta&quot;,&quot;ds_conventional_delta&quot;)
-    )
-  )
-  store_results(&quot;6&quot;, beta6, se6, mse6_anc, mse6_cf, res6$se)
+
+# 5) Build regression formula
+f6 &lt;- if (length(covs6) &gt; 0) {
+  as.formula(paste(&quot;Y ~ W +&quot;, paste(covs6, collapse = &quot; + &quot;)))
+} else {
+  as.formula(&quot;Y ~ W&quot;)
 }
 
-### Trial 14
-{
-  cf14 &lt;- fread(&quot;trial14/trial14_counterfactuals.csv&quot;)
-  df14 &lt;- cf14 %&gt;%
-    mutate(
-      A = ifelse(Treatment == &quot;TERECO&quot;, 1, 0),
-      Y = YP_6MWD_28w - X_6MWD_0w
-    ) %&gt;% drop_na()
-  covs14 &lt;- grep(&quot;_0w$&quot;, names(df14), value = TRUE)
-  f14 &lt;- if(length(covs14)&gt;0) as.formula(paste(&quot;Y ~ A +&quot;, paste(covs14,collapse=&quot; + &quot;))) else as.formula(&quot;Y ~ A&quot;)
-  fit14_anc &lt;- lm(f14, data = df14); s14 &lt;- summary(fit14_anc)
-  beta14     &lt;- s14$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
-  se14       &lt;- s14$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
-  df14$yhat14_anc &lt;- predict(fit14_anc, df14)
-  mse14_anc  &lt;- mean((df14$yhat14_anc - df14$Y)^2)
-  # CF
-  df14_cf &lt;- df14 %&gt;% mutate(
-    Z1 = ifelse(A == 0, chat_treatment_delta, 0),
-    Z0 = ifelse(A == 1, chat_control_delta,   0)
+# 6) ANCOVA (in‐sample MSE)
+fit6_anc     &lt;- lm(f6, data = df6)
+beta6        &lt;- coef(summary(fit6_anc))[&quot;W&quot;,&quot;Estimate&quot;]
+se6          &lt;- coef(summary(fit6_anc))[&quot;W&quot;,&quot;Std. Error&quot;]
+df6$yhat6_anc &lt;- predict(fit6_anc, df6)
+mse6_anc     &lt;- mean((df6$yhat6_anc - df6$Y)^2)
+
+# 7) Counterfactual regression (in‐sample MSE + ATE)
+df6_cf &lt;- df6 %&gt;%
+  mutate(
+    Z1 = ifelse(W == 0, chat_cf_delta, 0),
+    Z0 = ifelse(W == 1, chat_cf_delta, 0)
   )
-  fit14_cf    &lt;- lm(update(f14, . ~ . + Z1 + Z0), data = df14_cf)
-  df14$yhat14_cf &lt;- predict(fit14_cf, df14_cf)
-  mse14_cf   &lt;- mean((df14$yhat14_cf - df14$Y)^2)
-  # HAIPW
-  res14 &lt;- haipw_stack(
-    df14, &quot;TERECO&quot;, &quot;Y&quot;, covs14,
-    list(
-      chatgpt  = c(&quot;chat_treatment_delta&quot;,&quot;chat_control_delta&quot;),
-      deepseek = c(&quot;ds_treatment_delta&quot;,&quot;ds_control_delta&quot;)
-    )
+fit6_cf      &lt;- lm(update(f6, . ~ . + Z1 + Z0), data = df6_cf)
+df6$yhat6_cf &lt;- predict(fit6_cf, df6_cf)
+mse6_cf      &lt;- mean((df6$yhat6_cf - df6$Y)^2)
+
+# → Correct CF‐ATE using group‐specific means
+coefs_cf6 &lt;- coef(fit6_cf)
+m1_cf6    &lt;- mean(df6_cf$Z1[df6_cf$W == 0])
+m0_cf6    &lt;- mean(df6_cf$Z0[df6_cf$W == 1])
+ate6_cf   &lt;- coefs_cf6[&quot;W&quot;] + 
+             coefs_cf6[&quot;Z1&quot;] * m1_cf6 - 
+             coefs_cf6[&quot;Z0&quot;] * m0_cf6
+
+# 8) HAIPW stacking
+res6 &lt;- haipw_stack(
+  df6, &quot;Sitagliptin&quot;, &quot;Y&quot;, covs6,
+  list(
+    chatgpt  = c(&quot;chatgpt_y1&quot;, &quot;chatgpt_y0&quot;),
+    deepseek = c(&quot;ds_sitagliptin_delta&quot;, &quot;ds_conventional_delta&quot;)
   )
-  store_results(&quot;14&quot;, beta14, se14, mse14_anc, mse14_cf, res14$se)
+)
+
+# 9) Random Forest — OOB MSE
+fit6_rf     &lt;- ranger(f6, data = df6,
+                      num.trees = 500,
+                      respect.unordered.factors = &quot;order&quot;,
+                      seed = 2025)
+oob_mse6_rf &lt;- fit6_rf$prediction.error
+
+# 10) Bootstrap SE of the CF‐regression ATE (B = 500)
+B        &lt;- 500
+boot_cf6 &lt;- numeric(0)
+while (length(boot_cf6) &lt; B) {
+  idx    &lt;- sample(nrow(df6_cf), replace = TRUE)
+  bdf_cf &lt;- df6_cf[idx, ]
+  fit_b  &lt;- lm(update(f6, . ~ . + Z1 + Z0), data = bdf_cf)
+  coefs  &lt;- coef(fit_b)
+  cf_try &lt;- coefs[&quot;W&quot;] +
+            coefs[&quot;Z1&quot;] * mean(bdf_cf$Z1[bdf_cf$W==0]) -
+            coefs[&quot;Z0&quot;] * mean(bdf_cf$Z0[bdf_cf$W==1])
+  if (!is.na(cf_try)) boot_cf6 &lt;- c(boot_cf6, cf_try)
+}
+se6_cf_boot &lt;- sd(boot_cf6)
+
+# 11) Store results (now includes CF ATE &amp; SE)
+store_results(
+  &quot;6&quot;,
+  beta6,      se6,          # ANCOVA
+  res6$ate,   res6$se,      # HAIPW
+  ate6_cf,    se6_cf_boot,  # CF regression
+  mse6_anc,   mse6_cf,      # MSEs
+  oob_mse6_rf                  # RF OOB‐MSE
+)
+
+# 12) Quick summary of SE’s
+cat(&quot;SE(ANCOVA):           &quot;, round(se6,         3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(ANCOVA):            0.013</code></pre>
+<pre class="r"><code>cat(&quot;SE(HAIPW stacking):    &quot;, round(res6$se,     3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(HAIPW stacking):     0.004</code></pre>
+<pre class="r"><code>cat(&quot;SE(CF regression):     &quot;, round(se6_cf_boot, 3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(CF regression):      0.017</code></pre>
+<pre class="r"><code># trial14_full_analysis.R
+
+# 0) Load original &amp; updated counterfactual files
+orig_cf14 &lt;- fread(&quot;trial14/trial14_counterfactuals.csv&quot;)
+upd_cf14  &lt;- fread(&quot;trial14/trial14_counterfactuals_updated.csv&quot;)
+
+# 1) Combine, drop secondary outcomes, define treatment &amp; outcome
+df14 &lt;- bind_cols(orig_cf14, upd_cf14) %&gt;%
+  select(-starts_with(&quot;YS_&quot;)) %&gt;%
+  mutate(
+    A = ifelse(Treatment == &quot;TERECO&quot;, 1, 0),
+    Y = YP_6MWD_28w - X_6MWD_0w
+  ) %&gt;%
+  drop_na()
+
+# 2) Build covariate formula
+covs14 &lt;- grep(&quot;_0w$&quot;, names(df14), value = TRUE)
+f14 &lt;- if (length(covs14) &gt; 0) {
+  as.formula(paste(&quot;Y ~ A +&quot;, paste(covs14, collapse = &quot; + &quot;)))
+} else {
+  as.formula(&quot;Y ~ A&quot;)
 }
 
-### Trial 17
-{
-  cf17 &lt;- fread(&quot;trial17/trial17_counterfactuals.csv&quot;)
-  df17 &lt;- cf17 %&gt;%
-    mutate(
-      A = ifelse(Treatment == &quot;statin_pcsk9&quot;, 1, 0),
-      Y = YP_delta_LDL_24w
-    )
-  covs17 &lt;- grep(&quot;_0w$&quot;, names(df17), value = TRUE)
-  f17 &lt;- as.formula(paste(&quot;Y ~ A +&quot;, paste(covs17,collapse=&quot; + &quot;)))
-  fit17_anc &lt;- lm(f17, data = df17); s17 &lt;- summary(fit17_anc)
-  beta17      &lt;- s17$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
-  se17        &lt;- s17$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
-  df17$yhat17_anc &lt;- predict(fit17_anc, df17)
-  mse17_anc   &lt;- mean((df17$yhat17_anc - df17$Y)^2)
-  # CF
-  df17_cf &lt;- df17 %&gt;% mutate(
-    Z1 = ifelse(A == 0, chat_treatment_delta, 0),
-    Z0 = ifelse(A == 1, chat_control_delta,   0)
+# 3) ANCOVA
+fit14_anc    &lt;- lm(f14, data = df14)
+s14          &lt;- summary(fit14_anc)
+beta14       &lt;- s14$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
+se14         &lt;- s14$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
+df14$yhat_anc &lt;- predict(fit14_anc, df14)
+mse14_anc    &lt;- mean((df14$yhat_anc - df14$Y)^2)
+
+# 4) Counterfactual regression
+df14_cf &lt;- df14 %&gt;%
+  mutate(
+    Z1 = ifelse(A == 0, `o4-mini_cf_6MWD_6w`, 0),
+    Z0 = ifelse(A == 1, `o4-mini_cf_6MWD_6w`, 0)
   )
-  fit17_cf     &lt;- lm(update(f17, . ~ . + Z1 + Z0), data = df17_cf)
-  df17$yhat17_cf &lt;- predict(fit17_cf, df17_cf)
-  mse17_cf    &lt;- mean((df17$yhat17_cf - df17$Y)^2)
-  # HAIPW
-  res17 &lt;- haipw_stack(
-    df17, &quot;statin_pcsk9&quot;, &quot;Y&quot;, covs17,
-    list(
-      chatgpt  = c(&quot;chat_treatment_delta&quot;,&quot;chat_control_delta&quot;),
-      deepseek = c(&quot;ds_treatment_delta&quot;,&quot;ds_control_delta&quot;)
-    )
+fit14_cf     &lt;- lm(update(f14, . ~ . + Z1 + Z0), data = df14_cf)
+df14$yhat_cf &lt;- predict(fit14_cf, df14_cf)
+mse14_cf     &lt;- mean((df14$yhat_cf - df14$Y)^2)
+
+# → Correct CF‐ATE using group‐specific means
+coefs_cf14 &lt;- coef(fit14_cf)
+m1_cf14    &lt;- mean(df14_cf$Z1[df14_cf$A == 0])
+m0_cf14    &lt;- mean(df14_cf$Z0[df14_cf$A == 1])
+ate14_cf   &lt;- coefs_cf14[&quot;A&quot;] +
+              coefs_cf14[&quot;Z1&quot;] * m1_cf14 -
+              coefs_cf14[&quot;Z0&quot;] * m0_cf14
+
+# 5) HAIPW stacking
+res14 &lt;- haipw_stack(
+  df14, &quot;TERECO&quot;, &quot;Y&quot;, covs14,
+  list(
+    chatgpt  = c(&quot;chat_treatment_delta&quot;, &quot;chat_control_delta&quot;),
+    deepseek = c(&quot;ds_treatment_delta&quot;,   &quot;ds_control_delta&quot;)
   )
-  store_results(&quot;17&quot;, beta17, se17, mse17_anc, mse17_cf, res17$se)
+)
+
+# 6) Random Forest – OOB MSE
+fit14_rf     &lt;- ranger(f14, data = df14,
+                       num.trees = 500,
+                       respect.unordered.factors = &quot;order&quot;,
+                       seed = 2025)
+oob_mse14_rf &lt;- fit14_rf$prediction.error
+
+# 7) Bootstrap SE of CF‐regression ATE (B = 500)
+B          &lt;- 500
+boot_cf14  &lt;- numeric(0)
+while (length(boot_cf14) &lt; B) {
+  idx    &lt;- sample(nrow(df14_cf), replace = TRUE)
+  bdf_cf &lt;- df14_cf[idx, ]
+  fit_b  &lt;- lm(update(f14, . ~ . + Z1 + Z0), data = bdf_cf)
+  coefs  &lt;- coef(fit_b)
+  cf_try &lt;- coefs[&quot;A&quot;] +
+            coefs[&quot;Z1&quot;] * mean(bdf_cf$Z1[bdf_cf$A==0]) -
+            coefs[&quot;Z0&quot;] * mean(bdf_cf$Z0[bdf_cf$A==1])
+  if (!is.na(cf_try)) boot_cf14 &lt;- c(boot_cf14, cf_try)
+}
+se14_cf_boot &lt;- sd(boot_cf14)
+
+# 8) Store results (includes CF ATE &amp; SE)
+store_results(
+  &quot;14&quot;,
+  beta14,      se14,          # ANCOVA
+  res14$ate,   res14$se,      # HAIPW
+  ate14_cf,    se14_cf_boot,  # CF regression
+  mse14_anc,   mse14_cf,      # MSEs
+  oob_mse14_rf                  # RF OOB-MSE
+)
+
+# 9) Quick summary of SE’s
+cat(&quot;SE(ANCOVA):          &quot;, round(se14,         3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(ANCOVA):           12.95</code></pre>
+<pre class="r"><code>cat(&quot;SE(HAIPW stacking):   &quot;, round(res14$se,     3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(HAIPW stacking):    11.448</code></pre>
+<pre class="r"><code>cat(&quot;SE(CF regression):    &quot;, round(se14_cf_boot, 3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(CF regression):     26.338</code></pre>
+<pre class="r"><code># trial17_full_analysis.R
+
+library(data.table)
+library(dplyr)
+library(ranger)
+
+# 0) Load original &amp; updated counterfactuals
+orig_cf17 &lt;- fread(&quot;trial17/trial17_counterfactuals.csv&quot;) %&gt;%
+  filter(Treatment %in% c(&quot;statin&quot;, &quot;statin_pcsk9&quot;))
+upd_cf17  &lt;- fread(&quot;trial17/trial17_counterfactuals_updated.csv&quot;) %&gt;%
+  rename(chatgpt_cf_LDLpct_24w = names(.)[1])
+
+# 1) Combine and define treatment &amp; outcome
+df17 &lt;- bind_cols(orig_cf17, upd_cf17) %&gt;%
+  mutate(
+    Treatment = factor(Treatment, levels = c(&quot;statin&quot;, &quot;statin_pcsk9&quot;)),
+    A = as.integer(Treatment == &quot;statin_pcsk9&quot;),
+    Y = YP_delta_LDL_24w
+  ) %&gt;%
+  drop_na(A, Y)
+
+# 2) Specify covariates &amp; build regression formula
+covs17 &lt;- grep(&quot;_0w$&quot;, names(df17), value = TRUE)
+f17 &lt;- if (length(covs17) &gt; 0) {
+  as.formula(paste(&quot;Y ~ A +&quot;, paste(covs17, collapse = &quot; + &quot;)))
+} else {
+  as.formula(&quot;Y ~ A&quot;)
 }
 
-### Trial 19
-{
-  df19   &lt;- fread(&quot;trial19/trial19.csv&quot;)
-  chat19 &lt;- fread(&quot;trial19/trial19_chatgpt_potential_outcomes.csv&quot;)
-  ds19   &lt;- fread(&quot;trial19/trial19_deepseek_potential_outcomes.csv&quot;)
-  df19 &lt;- df19 %&gt;%
-    mutate(
-      A = ifelse(Treatment == &quot;Piggyback&quot;, 1, 0),
-      Y = YP_FHVP_CVP_GRADIENT
-    ) %&gt;% bind_cols(chat19, ds19)
-  covs19 &lt;- c(
-    &quot;X_RECIPIENT_AGE_YEARS_0d&quot;,&quot;X_RECIPIENT_GENDER_0d&quot;,
-    &quot;X_MELD_SCORE_0d&quot;,&quot;X_CREATININE_0d&quot;,
-    &quot;X_DONOR_AGE_YEARS_0d&quot;,&quot;X_GRAFT_SHARING_0d&quot;
+# 3) ANCOVA (in-sample MSE)
+fit17_anc      &lt;- lm(f17, data = df17)
+s17            &lt;- summary(fit17_anc)
+beta17         &lt;- s17$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
+se17           &lt;- s17$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
+df17$yhat17_anc &lt;- predict(fit17_anc, df17)
+mse17_anc      &lt;- mean((df17$yhat17_anc - df17$Y)^2)
+
+# 4) Counterfactual regression (in-sample MSE + ATE)
+df17_cf &lt;- df17 %&gt;%
+  mutate(
+    Z1 = ifelse(A == 0, chatgpt_cf_LDLpct_24w, 0),
+    Z0 = ifelse(A == 1, chatgpt_cf_LDLpct_24w, 0)
   )
-  f19       &lt;- as.formula(paste(&quot;Y ~ A +&quot;, paste(covs19,collapse=&quot; + &quot;)))
-  fit19_anc &lt;- lm(f19, data = df19); s19 &lt;- summary(fit19_anc)
-  beta19    &lt;- s19$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
-  se19      &lt;- s19$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
-  df19$yhat19_anc &lt;- predict(fit19_anc, df19)
-  mse19_anc &lt;- mean((df19$yhat19_anc - df19$Y)^2)
-  # CF
-  df19_cf &lt;- df19 %&gt;% mutate(
-    Z1 = ifelse(A == 0, chatgpt_piggyback, 0),
-    Z0 = ifelse(A == 1, chatgpt_conventional, 0)
+fit17_cf       &lt;- lm(update(f17, . ~ . + Z1 + Z0), data = df17_cf)
+df17$yhat17_cf &lt;- predict(fit17_cf, df17_cf)
+mse17_cf       &lt;- mean((df17$yhat17_cf - df17$Y)^2)
+
+# → Correct CF-regression ATE using group-specific means
+coefs_cf17 &lt;- coef(fit17_cf)
+m1_cf17    &lt;- mean(df17_cf$Z1[df17_cf$A == 0])
+m0_cf17    &lt;- mean(df17_cf$Z0[df17_cf$A == 1])
+ate17_cf   &lt;- coefs_cf17[&quot;A&quot;] +
+              coefs_cf17[&quot;Z1&quot;] * m1_cf17 -
+              coefs_cf17[&quot;Z0&quot;] * m0_cf17
+
+# 5) HAIPW stacking
+res17 &lt;- haipw_stack(
+  df17, &quot;statin_pcsk9&quot;, &quot;Y&quot;, covs17,
+  list(
+    chatgpt = c(&quot;chat_treatment_delta&quot;, &quot;chat_control_delta&quot;),
+    deepseek = c(&quot;ds_treatment_delta&quot;,   &quot;ds_control_delta&quot;)
   )
-  fit19_cf    &lt;- lm(update(f19, . ~ . + Z1 + Z0), data = df19_cf)
-  df19$yhat19_cf &lt;- predict(fit19_cf, df19_cf)
-  mse19_cf   &lt;- mean((df19$yhat19_cf - df19$Y)^2)
-  # HAIPW
-  res19 &lt;- haipw_stack(
-    df19, &quot;Piggyback&quot;, &quot;Y&quot;, covs19,
-    list(
-      chatgpt = c(&quot;chatgpt_piggyback&quot;,&quot;chatgpt_conventional&quot;),
-      deepseek = c(&quot;deepseek_piggyback&quot;,&quot;deepseek_conventional&quot;)
-    )
+)
+
+# 6) Random Forest – OOB MSE
+fit17_rf     &lt;- ranger(f17, data = df17,
+                       num.trees = 500,
+                       respect.unordered.factors = &quot;order&quot;,
+                       seed = 2025)
+oob_mse17_rf &lt;- fit17_rf$prediction.error
+
+# 7) Bootstrap SE of CF-regression ATE (B = 500)
+B         &lt;- 500
+boot_cf17 &lt;- numeric(0)
+while (length(boot_cf17) &lt; B) {
+  idx    &lt;- sample(nrow(df17_cf), replace = TRUE)
+  bdf_cf &lt;- df17_cf[idx, ]
+  fit_b  &lt;- lm(update(f17, . ~ . + Z1 + Z0), data = bdf_cf)
+  coefs  &lt;- coef(fit_b)
+  cf_try &lt;- coefs[&quot;A&quot;] +
+            coefs[&quot;Z1&quot;] * mean(bdf_cf$Z1[bdf_cf$A == 0]) -
+            coefs[&quot;Z0&quot;] * mean(bdf_cf$Z0[bdf_cf$A == 1])
+  if (!is.na(cf_try)) boot_cf17 &lt;- c(boot_cf17, cf_try)
+}
+se17_cf_boot &lt;- sd(boot_cf17)
+
+# 8) Store results (includes CF ATE &amp; SE)
+store_results(
+  &quot;17&quot;,
+  beta17,      se17,          # ANCOVA
+  res17$ate,   res17$se,      # HAIPW ATE
+  ate17_cf,    se17_cf_boot,  # CF-regression ATE &amp; SE
+  mse17_anc,   mse17_cf,      # in-sample MSEs
+  oob_mse17_rf                  # RF OOB-MSE
+)
+
+# 9) Quick summary of SE’s
+cat(&quot;SE(ANCOVA):          &quot;, round(se17,         3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(ANCOVA):           0.138</code></pre>
+<pre class="r"><code>cat(&quot;SE(HAIPW stacking):   &quot;, round(res17$se,     3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(HAIPW stacking):    0.128</code></pre>
+<pre class="r"><code>cat(&quot;SE(CF regression):    &quot;, round(se17_cf_boot, 3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(CF regression):     0.584</code></pre>
+<pre class="r"><code># trial19_full_analysis.R
+
+library(data.table)
+library(dplyr)
+library(ranger)
+
+set.seed(2025)
+
+# 0) Load raw data &amp; CF predictions
+df19_raw &lt;- fread(&quot;trial19/trial19.csv&quot;)
+
+# original ChatGPT unconditional preds
+chat19 &lt;- fread(&quot;trial19/trial19_chatgpt_potential_outcomes.csv&quot;) %&gt;%
+  rename(
+    chatgpt_y1 = chatgpt_piggyback,
+    chatgpt_y0 = chatgpt_conventional
   )
-  store_results(&quot;19&quot;, beta19, se19, mse19_anc, mse19_cf, res19$se)
+
+# Deepseek unconditional preds
+ds19 &lt;- fread(&quot;trial19/trial19_deepseek_potential_outcomes.csv&quot;) %&gt;%
+  rename(
+    deepseek_y1 = deepseek_piggyback,
+    deepseek_y0 = deepseek_conventional
+  )
+
+# updated single‐column CF file
+cf19 &lt;- fread(&quot;trial19/trial19_cf.csv&quot;) %&gt;%
+  rename(chat_cf_gradient = names(.)[1])
+
+# 1) Merge &amp; define treatment (A) and outcome (Y); drop only missing A or Y
+df19 &lt;- bind_cols(df19_raw, chat19, ds19, cf19) %&gt;%
+  mutate(
+    A = ifelse(Treatment == &quot;Piggyback&quot;, 1, 0),
+    Y = YP_FHVP_CVP_GRADIENT
+  ) %&gt;%
+  filter(!is.na(A), !is.na(Y))
+
+# 2) Baseline covariates
+covs19 &lt;- c(
+  &quot;X_RECIPIENT_AGE_YEARS_0d&quot;, &quot;X_RECIPIENT_GENDER_0d&quot;,
+  &quot;X_MELD_SCORE_0d&quot;,         &quot;X_CREATININE_0d&quot;,
+  &quot;X_DONOR_AGE_YEARS_0d&quot;,     &quot;X_GRAFT_SHARING_0d&quot;
+)
+
+# 3) Impute any missing covariates (median for numeric, mode for categorical)
+num_covs19 &lt;- df19 %&gt;% select(all_of(covs19)) %&gt;% select(where(is.numeric)) %&gt;% names()
+cat_covs19 &lt;- setdiff(covs19, num_covs19)
+
+df19 &lt;- df19 %&gt;%
+  mutate(across(all_of(num_covs19),
+                ~ ifelse(is.na(.), median(., na.rm = TRUE), .))) %&gt;%
+  mutate(across(all_of(cat_covs19),
+                ~ replace(., is.na(.),
+                          names(sort(table(.[!is.na(.)]), decreasing = TRUE))[1])))
+
+# 4) Reconstruct ChatGPT potential outcomes from the single CF column
+df19 &lt;- df19 %&gt;%
+  mutate(
+    chatgpt_y1_cf = ifelse(A == 1, Y, chat_cf_gradient),
+    chatgpt_y0_cf = ifelse(A == 0, Y, chat_cf_gradient)
+  )
+
+# 5) Build regression formula
+f19 &lt;- as.formula(paste(&quot;Y ~ A +&quot;, paste(covs19, collapse = &quot; + &quot;)))
+
+# 6) ANCOVA (in‐sample MSE)
+fit19_anc      &lt;- lm(f19, data = df19)
+s19            &lt;- summary(fit19_anc)
+beta19         &lt;- s19$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
+se19           &lt;- s19$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
+df19$yhat19_anc &lt;- predict(fit19_anc, df19)
+mse19_anc      &lt;- mean((df19$yhat19_anc - df19$Y)^2)
+
+# 7) Counterfactual regression (in‐sample MSE + ATE)
+df19_cf &lt;- df19 %&gt;%
+  mutate(
+    Z1 = ifelse(A == 0, chatgpt_y1_cf, 0),
+    Z0 = ifelse(A == 1, chatgpt_y0_cf, 0)
+  )
+fit19_cf       &lt;- lm(update(f19, . ~ . + Z1 + Z0), data = df19_cf)
+df19$yhat19_cf &lt;- predict(fit19_cf, df19_cf)
+mse19_cf       &lt;- mean((df19$yhat19_cf - df19$Y)^2)
+
+# compute CF‐regression ATE
+coefs19_cf &lt;- coef(fit19_cf)
+m1_19      &lt;- mean(df19_cf$Z1[df19_cf$A == 0])
+m0_19      &lt;- mean(df19_cf$Z0[df19_cf$A == 1])
+ate19_cf   &lt;- coefs19_cf[&quot;A&quot;] +
+              coefs19_cf[&quot;Z1&quot;] * m1_19 -
+              coefs19_cf[&quot;Z0&quot;] * m0_19
+
+# Bootstrap SE of CF‐regression ATE (B = 500)
+B            &lt;- 50
+boot_cf19    &lt;- numeric(0)
+while (length(boot_cf19) &lt; B) {
+  idx    &lt;- sample(nrow(df19_cf), replace = TRUE)
+  bdf    &lt;- df19_cf[idx, ]
+  fit_b  &lt;- lm(update(f19, . ~ . + Z1 + Z0), data = bdf)
+  coefs  &lt;- coef(fit_b)
+  cf_try &lt;- coefs[&quot;A&quot;] +
+            coefs[&quot;Z1&quot;] * mean(bdf$Z1[bdf$A == 0]) -
+            coefs[&quot;Z0&quot;] * mean(bdf$Z0[bdf$A == 1])
+  if (!is.na(cf_try)) boot_cf19 &lt;- c(boot_cf19, cf_try)
+}
+se19_cf_boot &lt;- sd(boot_cf19)
+
+# 8) HAIPW stacking (using original unconditional preds)
+res19 &lt;- haipw_stack(
+  df19, &quot;Piggyback&quot;, &quot;Y&quot;, covs19,
+  list(
+    chatgpt  = c(&quot;chatgpt_y1&quot;,&quot;chatgpt_y0&quot;),
+    deepseek = c(&quot;deepseek_y1&quot;,&quot;deepseek_y0&quot;)
+  )
+)
+
+# 9) Random Forest — OOB MSE
+fit19_rf      &lt;- ranger(
+  formula                   = f19,
+  data                      = df19,
+  num.trees                 = 500,
+  respect.unordered.factors = &quot;order&quot;,
+  seed                      = 2025
+)
+oob_mse19_rf  &lt;- fit19_rf$prediction.error
+
+# 10) Store results: ANCOVA β &amp; SE, HAIPW ATE &amp; SE, CF‐regression ATE &amp; SE, MSEs, RF OOB‐MSE
+store_results(
+  &quot;19&quot;,
+  beta19,
+  se19,
+  res19$ate,
+  res19$se,
+  ate19_cf,
+  se19_cf_boot,
+  mse19_anc,
+  mse19_cf,
+  oob_mse19_rf
+)
+se_list[[&quot;19&quot;]] &lt;- bind_rows(
+  se_list[[&quot;19&quot;]],
+  tibble(Trial     = &quot;19&quot;,
+         Estimator = &quot;CF Bootstrap&quot;,
+         SE        = se19_cf_boot)
+)</code></pre>
+<pre class="r"><code># trial26_full_analysis.R
+
+library(data.table)
+library(dplyr)
+library(ranger)
+
+set.seed(2025)
+
+# 0) Load raw data + CF predictions
+df26_raw &lt;- fread(&quot;trial26/trial26.csv&quot;)
+chat26   &lt;- fread(&quot;trial26/trial26_chatgpt_potential_adherence.csv&quot;)
+ds26     &lt;- fread(&quot;trial26/trial26_deepseek_potential_adherence.csv&quot;)
+upd_cf26 &lt;- fread(&quot;trial26/trial26_chatgpt_counterfactual_adherence.csv&quot;)
+
+# 1) Combine and define treatment &amp; outcome; drop missing A or Y
+df26 &lt;- df26_raw %&gt;%
+  mutate(
+    A = ifelse(Treatment == &quot;Reminder module&quot;, 1, 0),
+    Y = YP_delta_Adherence_6m
+  ) %&gt;%
+  bind_cols(chat26, ds26, upd_cf26) %&gt;%
+  filter(!is.na(A), !is.na(Y))
+
+# 2) Specify baseline covariates
+covs26 &lt;- c(
+  &quot;X_Agecat_0m&quot;,&quot;X_Education_0m&quot;,&quot;X_Ethnicity_0m&quot;,&quot;X_Socialsupport_0m&quot;,
+  &quot;X_TB_status_0m&quot;,&quot;X_OI_index_0m&quot;,&quot;X_weight_0m&quot;,&quot;X_CD4_0m&quot;,
+  &quot;X_viral_load_0m&quot;,&quot;X_Adherence_0m&quot;
+)
+
+# 3) Identify numeric vs. categorical
+num_covs26 &lt;- df26 %&gt;% select(all_of(covs26)) %&gt;% select(where(is.numeric)) %&gt;% names()
+cat_covs26 &lt;- setdiff(covs26, num_covs26)
+
+# 4) Impute missing covariates
+df26 &lt;- df26 %&gt;%
+  mutate(across(all_of(num_covs26),
+                ~ ifelse(is.na(.), median(., na.rm = TRUE), .))) %&gt;%
+  mutate(across(all_of(cat_covs26),
+                ~ {
+                  m &lt;- names(sort(table(.[!is.na(.)]), decreasing = TRUE))[1]
+                  replace(., is.na(.), m)
+                }))
+
+# 5) Build regression formula
+f26 &lt;- as.formula(paste(&quot;Y ~ A +&quot;, paste(covs26, collapse = &quot; + &quot;)))
+
+# 6) ANCOVA (in‐sample MSE)
+fit26_anc      &lt;- lm(f26, data = df26)
+s26            &lt;- summary(fit26_anc)
+beta26         &lt;- s26$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
+se26           &lt;- s26$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
+df26$yhat26_anc &lt;- predict(fit26_anc, df26)
+mse26_anc      &lt;- mean((df26$yhat26_anc - df26$Y)^2)
+
+# 7) Counterfactual regression (in‐sample MSE + ATE)
+df26_cf &lt;- df26 %&gt;%
+  mutate(
+    Z1 = ifelse(A == 0, chatgpt_Dadh_6m_cf, 0),
+    Z0 = ifelse(A == 1, chatgpt_Dadh_6m_cf, 0)
+  )
+fit26_cf       &lt;- lm(update(f26, . ~ . + Z1 + Z0), data = df26_cf)
+df26$yhat26_cf &lt;- predict(fit26_cf, df26_cf)
+mse26_cf       &lt;- mean((df26$yhat26_cf - df26$Y)^2)
+
+# → Correct CF‐regression ATE using group‐specific means
+coefs_cf26 &lt;- coef(fit26_cf)
+m1_cf26    &lt;- mean(df26_cf$Z1[df26_cf$A == 0])
+m0_cf26    &lt;- mean(df26_cf$Z0[df26_cf$A == 1])
+ate26_cf   &lt;- coefs_cf26[&quot;A&quot;] +
+              coefs_cf26[&quot;Z1&quot;] * m1_cf26 -
+              coefs_cf26[&quot;Z0&quot;] * m0_cf26
+
+# 8) HAIPW stacking
+res26 &lt;- haipw_stack(
+  df26, &quot;Reminder module&quot;, &quot;Y&quot;, covs26,
+  list(
+    chatgpt  = c(&quot;chatgpt_Δadh_6m_1&quot;, &quot;chatgpt_Δadh_6m_0&quot;),
+    deepseek = c(&quot;ds_Δadh_6m_1&quot;,       &quot;ds_Δadh_6m_0&quot;)
+  )
+)
+
+# 9) Random Forest — OOB MSE
+fit26_rf     &lt;- ranger(f26, data = df26,
+                       num.trees = 500,
+                       respect.unordered.factors = &quot;order&quot;,
+                       seed = 2025)
+oob_mse26_rf &lt;- fit26_rf$prediction.error
+
+# 10) Bootstrap SE of the CF‐regression ATE (B = 500)
+B         &lt;- 500
+boot_cf26 &lt;- numeric(0)
+while (length(boot_cf26) &lt; B) {
+  idx    &lt;- sample(nrow(df26_cf), replace = TRUE)
+  bdf_cf &lt;- df26_cf[idx, ]
+  fit_b  &lt;- lm(update(f26, . ~ . + Z1 + Z0), data = bdf_cf)
+  coefs  &lt;- coef(fit_b)
+  cf_try &lt;- coefs[&quot;A&quot;] +
+            coefs[&quot;Z1&quot;] * mean(bdf_cf$Z1[bdf_cf$A == 0]) -
+            coefs[&quot;Z0&quot;] * mean(bdf_cf$Z0[bdf_cf$A == 1])
+  if (!is.na(cf_try)) boot_cf26 &lt;- c(boot_cf26, cf_try)
+}
+se26_cf_boot &lt;- sd(boot_cf26)
+
+# 11) Store results (includes CF ATE &amp; SE)
+store_results(
+  &quot;26&quot;,
+  beta26,      se26,           # ANCOVA
+  res26$ate,   res26$se,       # HAIPW ATE
+  ate26_cf,    se26_cf_boot,   # CF‐regression ATE &amp; SE
+  mse26_anc,   mse26_cf,       # MSEs
+  oob_mse26_rf                     # RF OOB‐MSE
+)
+
+# 12) Quick summary of SE’s
+cat(&quot;SE(ANCOVA):          &quot;, round(se26,         3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(ANCOVA):           1.011</code></pre>
+<pre class="r"><code>cat(&quot;SE(HAIPW stacking):   &quot;, round(res26$se,     3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(HAIPW stacking):    0.927</code></pre>
+<pre class="r"><code>cat(&quot;SE(CF regression):    &quot;, round(se26_cf_boot, 3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(CF regression):     1.263</code></pre>
+<pre class="r"><code># trial33_full_analysis.R
+
+library(data.table)
+library(dplyr)
+library(ranger)
+
+set.seed(2025)
+
+# 0) Load raw data &amp; ChatGPT CF files
+df33_raw    &lt;- fread(&quot;trial 33/trial33.csv&quot;)
+chat33_orig &lt;- fread(&quot;trial 33/trial33_gpt-4.1_counterfactuals.csv&quot;) %&gt;%
+  rename(
+    chatgpt_y1 = `gpt-4.1_TMscore_6m_R`,
+    chatgpt_y0 = `gpt-4.1_TMscore_6m_S`
+  )
+chat33_cf   &lt;- fread(&quot;trial 33/trial33_gpt-4.1_cf.csv&quot;) %&gt;%
+  rename(chat_cf = `chatgpt_cf_TMscore_6m`)
+
+# 1) Combine, define treatment &amp; outcome, drop missing
+df33 &lt;- bind_cols(chat33_orig, chat33_cf) %&gt;%
+  mutate(
+    A = ifelse(Treatment == &quot;Reframing&quot;, 1, 0),
+    Y = YP_TM_total_score
+  ) %&gt;%
+  filter(!is.na(A), !is.na(Y))
+
+# 2) Baseline covariates
+covs33 &lt;- grep(&quot;_0w$&quot;, names(df33), value = TRUE)
+
+# 3) Identify numeric vs categorical
+num_covs33 &lt;- df33 %&gt;% select(all_of(covs33)) %&gt;% select(where(is.numeric)) %&gt;% names()
+cat_covs33 &lt;- setdiff(covs33, num_covs33)
+
+# 4) Impute missing covariates
+df33 &lt;- df33 %&gt;%
+  mutate(across(all_of(num_covs33),
+                ~ ifelse(is.na(.), median(., na.rm = TRUE), .))) %&gt;%
+  mutate(across(all_of(cat_covs33),
+                ~ replace(., is.na(.),
+                          names(sort(table(.[!is.na(.)]), decreasing = TRUE))[1])))
+
+# 5) Reconstruct both‐arm potential outcomes for HAIPW
+df33 &lt;- df33 %&gt;%
+  mutate(
+    chatgpt_y1 = ifelse(A == 1, Y, chat_cf),
+    chatgpt_y0 = ifelse(A == 0, Y, chat_cf)
+  )
+
+# 6) Build regression formula
+f33 &lt;- if (length(covs33) &gt; 0) {
+  as.formula(paste(&quot;Y ~ A +&quot;, paste(covs33, collapse = &quot; + &quot;)))
+} else {
+  as.formula(&quot;Y ~ A&quot;)
 }
 
-### Trial 26
-{
-  df26   &lt;- fread(&quot;trial26/trial26.csv&quot;)
-  chat26 &lt;- fread(&quot;trial26/trial26_chatgpt_potential_adherence.csv&quot;)
-  ds26   &lt;- fread(&quot;trial26/trial26_deepseek_potential_adherence.csv&quot;)
-  df26 &lt;- df26 %&gt;%
-    mutate(
-      A = ifelse(Treatment == &quot;Reminder module&quot;, 1, 0),
-      Y = YP_delta_Adherence_6m
-    ) %&gt;% bind_cols(chat26, ds26)
-  covs26 &lt;- c(
-    &quot;X_Agecat_0m&quot;,&quot;X_Education_0m&quot;,&quot;X_Ethnicity_0m&quot;, &quot;X_Socialsupport_0m&quot;,
-    &quot;X_TB_status_0m&quot;,&quot;X_OI_index_0m&quot;,&quot;X_weight_0m&quot;,&quot;X_CD4_0m&quot;,
-    &quot;X_viral_load_0m&quot;,&quot;X_Adherence_0m&quot;
+# 7) ANCOVA (in‐sample MSE)
+fit33_anc     &lt;- lm(f33, data = df33)
+beta33        &lt;- coef(summary(fit33_anc))[&quot;A&quot;,&quot;Estimate&quot;]
+se33          &lt;- coef(summary(fit33_anc))[&quot;A&quot;,&quot;Std. Error&quot;]
+df33$yhat_anc &lt;- predict(fit33_anc, df33)
+mse33_anc     &lt;- mean((df33$yhat_anc - df33$Y)^2)
+
+# 8) Counterfactual regression (in‐sample MSE + ATE)
+df33_cf       &lt;- df33 %&gt;%
+  mutate(
+    Z1 = ifelse(A == 0, chat_cf, 0),
+    Z0 = ifelse(A == 1, chat_cf, 0)
   )
-  f26       &lt;- as.formula(paste(&quot;Y ~ A +&quot;, paste(covs26,collapse=&quot; + &quot;)))
-  fit26_anc &lt;- lm(f26,data=df26); s26 &lt;- summary(fit26_anc)
-  beta26    &lt;- s26$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
-  se26      &lt;- s26$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
-  df26$yhat26_anc &lt;- predict(fit26_anc, df26)
-  mse26_anc &lt;- mean((df26$yhat26_anc - df26$Y)^2)
-  # CF
-  df26_cf &lt;- df26 %&gt;% mutate(
-    Z1 = ifelse(A == 0, chatgpt_deltaadh_6m_1, 0),
-    Z0 = ifelse(A == 1, chatgpt_deltaadh_6m_0, 0)
+fit33_cf      &lt;- lm(update(f33, . ~ . + Z1 + Z0), data = df33_cf)
+df33$yhat_cf  &lt;- predict(fit33_cf, df33_cf)
+mse33_cf      &lt;- mean((df33$yhat_cf - df33$Y)^2)
+
+# → Correct CF‐regression ATE using group‐specific means
+coefs_cf33 &lt;- coef(fit33_cf)
+m1_cf33    &lt;- mean(df33_cf$Z1[df33_cf$A == 0])
+m0_cf33    &lt;- mean(df33_cf$Z0[df33_cf$A == 1])
+ate33_cf   &lt;- coefs_cf33[&quot;A&quot;] +
+              coefs_cf33[&quot;Z1&quot;] * m1_cf33 -
+              coefs_cf33[&quot;Z0&quot;] * m0_cf33
+
+# 9) HAIPW stacking
+res33 &lt;- haipw_stack(
+  df33, &quot;Reframing&quot;, &quot;Y&quot;, covs33,
+  list(chatgpt = c(&quot;chatgpt_y1&quot;,&quot;chatgpt_y0&quot;))
+)
+
+# 10) Random Forest – OOB MSE
+fit33_rf      &lt;- ranger(f33, data = df33, num.trees = 500,
+                        respect.unordered.factors = &quot;order&quot;,
+                        seed = 2025)
+oob_mse33_rf  &lt;- fit33_rf$prediction.error
+
+# 11) Bootstrap SE of CF‐regression ATE (B = 500)
+B           &lt;- 500
+boot33      &lt;- numeric(0)
+while (length(boot33) &lt; B) {
+  idx    &lt;- sample(nrow(df33_cf), replace = TRUE)
+  bdf    &lt;- df33_cf[idx, ]
+  fit_b  &lt;- lm(update(f33, . ~ . + Z1 + Z0), data = bdf)
+  coefs  &lt;- coef(fit_b)
+  cf_try &lt;- coefs[&quot;A&quot;] +
+            coefs[&quot;Z1&quot;] * mean(bdf$Z1[bdf$A == 0]) -
+            coefs[&quot;Z0&quot;] * mean(bdf$Z0[bdf$A == 1])
+  if (!is.na(cf_try)) boot33 &lt;- c(boot33, cf_try)
+}
+se33_cf_boot &lt;- sd(boot33)
+
+# 12) Store results (includes CF ATE &amp; SE)
+store_results(
+  &quot;33&quot;,
+  beta33,      se33,          # ANCOVA
+  res33$ate,   res33$se,      # HAIPW ATE &amp; SE
+  ate33_cf,    se33_cf_boot,  # CF regression ATE &amp; SE
+  mse33_anc,   mse33_cf,      # in‐sample MSEs
+  oob_mse33_rf                   # RF OOB‐MSE
+)
+
+# 13) Quick summary of SE’s
+cat(&quot;SE(ANCOVA):          &quot;, round(se33,        3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(ANCOVA):           1.831</code></pre>
+<pre class="r"><code>cat(&quot;SE(HAIPW stacking):   &quot;, round(res33$se,    3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(HAIPW stacking):    0.146</code></pre>
+<pre class="r"><code>cat(&quot;SE(CF regression):    &quot;, round(se33_cf_boot,3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(CF regression):     1.992</code></pre>
+<pre class="r"><code>summary(fit33_cf)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = update(f33, . ~ . + Z1 + Z0), data = df33_cf)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -2.8016 -0.5398 -0.0737  0.5145  3.4988 
+## 
+## Coefficients:
+##                   Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)        0.45377    0.78265   0.580   0.5630    
+## A                 -2.66886    0.45383  -5.881  2.8e-08 ***
+## X_age_0w           0.01128    0.00787   1.434   0.1539    
+## X_Gender_0w        0.13314    0.19035   0.699   0.4854    
+## X_Ethnicity_0w    -0.98398    0.43915  -2.241   0.0266 *  
+## X_Race_0w          0.08880    0.09545   0.930   0.3538    
+## X_Education_0w    -0.09773    0.13289  -0.735   0.4633    
+## X_Employment_0w    0.42370    0.22270   1.903   0.0591 .  
+## X_DiseaseGroup_0w -0.05406    0.05513  -0.981   0.3284    
+## X_Volunteer_0w     0.12543    0.24203   0.518   0.6051    
+## Z1                 1.07953    0.01283  84.113  &lt; 2e-16 ***
+## Z0                 0.97611    0.01019  95.747  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1.109 on 142 degrees of freedom
+## Multiple R-squared:  0.9931, Adjusted R-squared:  0.9926 
+## F-statistic:  1870 on 11 and 142 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code># trial35_full_analysis.R
+
+set.seed(2025)
+
+# 0) Load raw data &amp; prediction files
+df35_raw      &lt;- fread(&quot;trial 35/trial35.csv&quot;)
+chat35_uncond &lt;- fread(&quot;trial 35/trial35_unconditional_predictions.csv&quot;)
+ds35          &lt;- fread(&quot;trial 35/trial35_deepseek_potential_outcomes.csv&quot;)
+cf35          &lt;- fread(&quot;trial 35/trial35_counterfactual_predictions.csv&quot;) %&gt;%
+  rename(chat_cf = names(.)[!names(.) %in% c(names(df35_raw),
+                                              names(chat35_uncond),
+                                              names(ds35))])
+
+# 1) Combine, define A &amp; Y, drop only missing
+df35 &lt;- df35_raw %&gt;%
+  mutate(
+    A = ifelse(Treatment == &quot;Exercise&quot;, 1, 0),
+    Y = YP_delta_Total_weight_gain_delivery
+  ) %&gt;%
+  filter(!is.na(A), !is.na(Y)) %&gt;%
+  bind_cols(chat35_uncond, ds35, cf35)
+
+# 2) Baseline covariates
+covs35 &lt;- c(
+  &quot;X_preg_BMI_0w&quot;, &quot;X_BMI_0w&quot;, &quot;X_PGWB_index_0w&quot;,
+  &quot;X_Anxiety_0w&quot;, &quot;X_Depressed_0w&quot;, &quot;X_Pos_Wellbeing_0w&quot;,
+  &quot;X_Self_control_0w&quot;, &quot;X_General_Health_0w&quot;, &quot;X_Vitality_0w&quot;
+)
+
+# 3) Impute missing covariates
+num_covs35 &lt;- df35 %&gt;% select(all_of(covs35)) %&gt;% select(where(is.numeric)) %&gt;% names()
+cat_covs35 &lt;- setdiff(covs35, num_covs35)
+
+df35 &lt;- df35 %&gt;%
+  mutate(across(all_of(num_covs35),
+                ~ ifelse(is.na(.), median(., na.rm = TRUE), .))) %&gt;%
+  mutate(across(all_of(cat_covs35),
+                ~ {
+                  m &lt;- names(sort(table(.[!is.na(.)]), decreasing = TRUE))[1]
+                  replace(., is.na(.), m)
+                }))
+
+# 4) Reconstruct both-arm ChatGPT predictions for HAIPW
+df35 &lt;- df35 %&gt;%
+  mutate(
+    chatgpt_y1 = ifelse(A == 1, Y, chat_cf),
+    chatgpt_y0 = ifelse(A == 0, Y, chat_cf)
   )
-  fit26_cf    &lt;- lm(update(f26, . ~ . + Z1 + Z0), data = df26_cf)
-  df26$yhat26_cf &lt;- predict(fit26_cf, df26_cf)
-  mse26_cf   &lt;- mean((df26$yhat26_cf - df26$Y)^2)
-  # HAIPW
-  res26 &lt;- haipw_stack(
-    df26, &quot;Reminder module&quot;, &quot;Y&quot;, covs26,
-    list(
-      chatgpt = c(&quot;chatgpt_deltaadh_6m_1&quot;,&quot;chatgpt_deltaadh_6m_0&quot;),
-      deepseek = c(&quot;deepseek_deltaadh_6m_1&quot;,&quot;deepseek_deltaadh_6m_0&quot;)
-    )
+
+# 5) Build regression formula
+f35 &lt;- as.formula(paste(&quot;Y ~ A +&quot;, paste(covs35, collapse = &quot; + &quot;)))
+
+# 6) ANCOVA (in-sample MSE)
+fit35_anc      &lt;- lm(f35, data = df35)
+beta35         &lt;- coef(summary(fit35_anc))[&quot;A&quot;,&quot;Estimate&quot;]
+se35           &lt;- coef(summary(fit35_anc))[&quot;A&quot;,&quot;Std. Error&quot;]
+df35$yhat35_anc &lt;- predict(fit35_anc, df35)
+mse35_anc      &lt;- mean((df35$yhat35_anc - df35$Y)^2)
+
+# 7) Counterfactual regression (in-sample MSE + ATE)
+df35_cf        &lt;- df35 %&gt;%
+  mutate(
+    Z1 = ifelse(A == 0, chat_cf, 0),
+    Z0 = ifelse(A == 1, chat_cf, 0)
   )
-  store_results(&quot;26&quot;, beta26, se26, mse26_anc, mse26_cf, res26$se)
-}</code></pre>
-<pre class="r"><code># Combine across trials
+fit35_cf       &lt;- lm(update(f35, . ~ . + Z1 + Z0), data = df35_cf)
+df35$yhat35_cf &lt;- predict(fit35_cf, df35_cf)
+mse35_cf       &lt;- mean((df35$yhat35_cf - df35$Y)^2)
+
+# → Correct CF-regression ATE using group-specific means
+coefs_cf35 &lt;- coef(fit35_cf)
+m1_cf35    &lt;- mean(df35_cf$Z1[df35_cf$A == 0])
+m0_cf35    &lt;- mean(df35_cf$Z0[df35_cf$A == 1])
+ate35_cf   &lt;- coefs_cf35[&quot;A&quot;] +
+              coefs_cf35[&quot;Z1&quot;] * m1_cf35 -
+              coefs_cf35[&quot;Z0&quot;] * m0_cf35
+
+# 8) HAIPW stacking
+res35 &lt;- haipw_stack(
+  df35, &quot;Exercise&quot;, &quot;Y&quot;, covs35,
+  list(
+    chatgpt  = c(&quot;chatgpt_y1&quot;,&quot;chatgpt_y0&quot;),
+    deepseek = c(&quot;deepseek_y1&quot;,&quot;deepseek_y0&quot;)
+  )
+)
+
+# 9) Random Forest — OOB MSE
+fit35_rf     &lt;- ranger(f35, data = df35,
+                       num.trees = 500,
+                       respect.unordered.factors = &quot;order&quot;,
+                       seed = 2025)
+oob_mse35_rf &lt;- fit35_rf$prediction.error
+
+# 10) Bootstrap SE of CF-regression ATE (B = 500)
+B          &lt;- 500
+boot_cf35  &lt;- numeric(0)
+while(length(boot_cf35) &lt; B) {
+  idx     &lt;- sample(nrow(df35_cf), replace = TRUE)
+  bdf_cf  &lt;- df35_cf[idx, ]
+  fit_b   &lt;- lm(update(f35, . ~ . + Z1 + Z0), data = bdf_cf)
+  coefs   &lt;- coef(fit_b)
+  cf_try  &lt;- coefs[&quot;A&quot;] +
+             coefs[&quot;Z1&quot;] * mean(bdf_cf$Z1[bdf_cf$A == 0]) -
+             coefs[&quot;Z0&quot;] * mean(bdf_cf$Z0[bdf_cf$A == 1])
+  if(!is.na(cf_try)) boot_cf35 &lt;- c(boot_cf35, cf_try)
+}
+se35_cf_boot &lt;- sd(boot_cf35)
+
+# 11) Store results (includes CF ATE &amp; SE)
+store_results(
+  &quot;35&quot;,
+  beta35,        se35,          # ANCOVA
+  res35$ate,     res35$se,      # HAIPW ATE &amp; SE
+  ate35_cf,      se35_cf_boot,  # CF regression ATE &amp; SE
+  mse35_anc,     mse35_cf,      # in-sample MSEs
+  oob_mse35_rf                    # RF OOB-MSE
+)
+
+# 12) Quick summary of SE’s
+cat(&quot;SE(ANCOVA):          &quot;, round(se35,        3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(ANCOVA):           1.609</code></pre>
+<pre class="r"><code>cat(&quot;SE(HAIPW stacking):   &quot;, round(res35$se,    3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(HAIPW stacking):    0.139</code></pre>
+<pre class="r"><code>cat(&quot;SE(CF regression):    &quot;, round(se35_cf_boot,3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(CF regression):     1.494</code></pre>
+<pre class="r"><code>summary(fit14_cf)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = update(f14, . ~ . + Z1 + Z0), data = df14_cf)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -126.970  -24.958    4.173   25.814  111.095 
+## 
+## Coefficients:
+##                        Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)           262.31203  167.00206   1.571 0.120634    
+## A                     109.51587   16.54500   6.619 5.52e-09 ***
+## X_center_0w           -45.94028   12.58479  -3.650 0.000493 ***
+## X_sex_0w               29.61245   22.63680   1.308 0.194982    
+## X_age_0w               -0.79629    0.80663  -0.987 0.326861    
+## X_disease_severity_0w  13.22749   17.90443   0.739 0.462441    
+## X_corticosteroid_0w   -10.50634   17.65637  -0.595 0.553679    
+## X_oxygen_0w            12.86923   18.76978   0.686 0.495145    
+## X_los_0w               -0.05542    0.44005  -0.126 0.900130    
+## X_comorbidity_0w        5.76457   22.02926   0.262 0.794317    
+## X_diabetes_0w          -9.93571   26.38886  -0.377 0.707644    
+## X_heart_0w             37.93604   29.71442   1.277 0.205815    
+## X_lung_0w              -3.03027   34.11551  -0.089 0.929468    
+## X_obesity_0w           -9.91415   24.68699  -0.402 0.689172    
+## X_hypertension_0w       1.85776   23.84812   0.078 0.938124    
+## X_othercomorb_0w        5.91372   26.24736   0.225 0.822379    
+## X_smoke_0w            -30.65113   24.07384  -1.273 0.207038    
+## X_6MWD_0w              -0.34069    0.09372  -3.635 0.000518 ***
+## X_squat_0w              0.09958    0.29230   0.341 0.734348    
+## X_fvc_0w              -23.60143   52.82852  -0.447 0.656393    
+## X_fev1_0w              17.74115   64.82177   0.274 0.785106    
+## X_fevfvc_0w           -34.98069  175.52144  -0.199 0.842593    
+## X_mvv_0w               -0.17482    0.25194  -0.694 0.489974    
+## X_pef_0w                2.40397    4.40972   0.545 0.587334    
+## X_SF12_PCS_0w           1.24655    1.01416   1.229 0.223019    
+## X_SF12_MCS_0w           0.36675    0.70144   0.523 0.602681    
+## Z1                      0.64140    0.18046   3.554 0.000674 ***
+## Z0                      0.32393    0.18936   1.711 0.091447 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 51.53 on 72 degrees of freedom
+## Multiple R-squared:  0.7272, Adjusted R-squared:  0.625 
+## F-statistic:  7.11 on 27 and 72 DF,  p-value: 1.416e-11</code></pre>
+<pre class="r"><code># trial36_full_analysis.R
+
+library(data.table)
+library(dplyr)
+library(ranger)
+
+set.seed(2025)
+
+# 0) Load two CF sources
+chat36_orig &lt;- fread(&quot;trial 36/trial36_gpt-4.1_counterfactuals.csv&quot;) %&gt;%
+  rename(
+    chatgpt_y1 = `gpt-4.1_ΔAttentionExe_12m_ACI`,
+    chatgpt_y0 = `gpt-4.1_ΔAttentionExe_12m_PI`
+  )%&gt;%
+  filter(Treatment %in% c(&quot;ACI&quot;, &quot;PI&quot;))
+
+
+o4mini_cf   &lt;- fread(&quot;trial 36/trial36_o4-mini_cf.csv&quot;) %&gt;%
+  rename(chat_cf = names(.)[1])
+
+# 1) Combine, define treatment &amp; outcome, drop missing
+df36 &lt;- bind_cols( chat36_orig, o4mini_cf) %&gt;%
+  filter(Treatment %in% c(&quot;ACI&quot;, &quot;PI&quot;)) %&gt;%
+  mutate(
+    A = ifelse(Treatment == &quot;ACI&quot;, 1, 0),
+    Y = YP_delta_AttentionExe_12m
+  ) %&gt;%
+  filter(!is.na(A), !is.na(Y))
+
+# 2) Baseline covariates
+covs36 &lt;- c(
+  &quot;X_GDS_0m&quot;,&quot;X_EMQ_0m&quot;,&quot;X_STAI_0m&quot;,&quot;X_MMSE_0m&quot;,
+  &quot;X_RAVLT_delayedrecall_0m&quot;,&quot;X_IPAQ_total_0m&quot;,&quot;X_MeDi_score_0m&quot;,
+  &quot;X_MemoryNew_0m&quot;,&quot;X_AttentionExe_0m&quot;,&quot;X_VisuoSpNew_0m&quot;
+)
+
+# 3) Impute missing covariates (median for numeric, mode for categorical)
+num_covs36 &lt;- df36 %&gt;% select(all_of(covs36)) %&gt;% select(where(is.numeric)) %&gt;% names()
+cat_covs36 &lt;- setdiff(covs36, num_covs36)
+
+df36 &lt;- df36 %&gt;%
+  mutate(across(all_of(num_covs36),
+                ~ ifelse(is.na(.x), median(.x, na.rm = TRUE), .x))) %&gt;%
+  mutate(across(all_of(cat_covs36),
+                ~ replace(., is.na(.), 
+                          names(sort(table(.[!is.na(.)]), decreasing = TRUE))[1])))
+
+# 4) Reconstruct both‐arm ChatGPT predictions for HAIPW
+df36 &lt;- df36 %&gt;%
+  mutate(
+    chatgpt_y1 = ifelse(A == 1, Y, chat_cf),
+    chatgpt_y0 = ifelse(A == 0, Y, chat_cf)
+  )
+
+# 5) Build regression formula
+f36 &lt;- as.formula(paste(&quot;Y ~ A +&quot;, paste(covs36, collapse = &quot; + &quot;)))
+
+# 6) ANCOVA (in‐sample MSE)
+fit36_anc      &lt;- lm(f36, data = df36)
+s36_anc        &lt;- summary(fit36_anc)
+beta36         &lt;- s36_anc$coefficients[&quot;A&quot;,&quot;Estimate&quot;]
+se36           &lt;- s36_anc$coefficients[&quot;A&quot;,&quot;Std. Error&quot;]
+df36$yhat36_anc &lt;- predict(fit36_anc, df36)
+mse36_anc      &lt;- mean((df36$yhat36_anc - df36$Y)^2)
+
+# 7) Counterfactual regression (in‐sample MSE + ATE)
+df36_cf &lt;- df36 %&gt;%
+  mutate(
+    Z1 = ifelse(A == 0, chat_cf, 0),
+    Z0 = ifelse(A == 1, chat_cf, 0)
+  )
+fit36_cf        &lt;- lm(update(f36, . ~ . + Z1 + Z0), data = df36_cf)
+df36$yhat36_cf  &lt;- predict(fit36_cf, df36_cf)
+mse36_cf        &lt;- mean((df36$yhat36_cf - df36$Y)^2)
+
+# → Correct CF‐regression ATE using group‐specific means
+coefs_cf36 &lt;- coef(fit36_cf)
+m1_cf36    &lt;- mean(df36_cf$Z1[df36_cf$A == 0])
+m0_cf36    &lt;- mean(df36_cf$Z0[df36_cf$A == 1])
+ate36_cf   &lt;- coefs_cf36[&quot;A&quot;] +
+              coefs_cf36[&quot;Z1&quot;] * m1_cf36 -
+              coefs_cf36[&quot;Z0&quot;] * m0_cf36
+
+# 8) HAIPW stacking
+res36 &lt;- haipw_stack(
+  df36, &quot;ACI&quot;, &quot;Y&quot;, covs36,
+  list(chatgpt = c(&quot;chatgpt_y1&quot;, &quot;chatgpt_y0&quot;))
+)
+
+# 9) Random Forest — OOB MSE
+fit36_rf     &lt;- ranger(f36, data = df36,
+                       num.trees = 500,
+                       respect.unordered.factors = &quot;order&quot;,
+                       seed = 2025)
+oob_mse36_rf &lt;- fit36_rf$prediction.error
+
+# 10) Bootstrap SE of CF‐regression ATE (B = 500)
+B      &lt;- 500
+boot36 &lt;- numeric(0)
+while (length(boot36) &lt; B) {
+  idx    &lt;- sample(nrow(df36_cf), replace = TRUE)
+  bdf    &lt;- df36_cf[idx, ]
+  fit_b  &lt;- lm(update(f36, . ~ . + Z1 + Z0), data = bdf)
+  coefs  &lt;- coef(fit_b)
+  cf_try &lt;- coefs[&quot;A&quot;] +
+            coefs[&quot;Z1&quot;] * mean(bdf$Z1[bdf$A == 0]) -
+            coefs[&quot;Z0&quot;] * mean(bdf$Z0[bdf$A == 1])
+  if (!is.na(cf_try)) boot36 &lt;- c(boot36, cf_try)
+}
+se36_cf_boot &lt;- sd(boot36)
+
+# 11) Store results (includes CF‐regression ATE &amp; SE)
+store_results(
+  &quot;36&quot;,
+  beta36,        se36,         # ANCOVA
+  res36$ate,     res36$se,     # HAIPW ATE &amp; SE
+  ate36_cf,      se36_cf_boot, # CF‐regression ATE &amp; SE
+  mse36_anc,     mse36_cf,     # in‐sample MSEs
+  oob_mse36_rf                  # RF OOB‐MSE
+)
+
+# 12) Quick summary of SE’s
+cat(&quot;SE(ANCOVA):          &quot;, round(se36,        3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(ANCOVA):           0.094</code></pre>
+<pre class="r"><code>cat(&quot;SE(HAIPW stacking):   &quot;, round(res36$se,    3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(HAIPW stacking):    0.017</code></pre>
+<pre class="r"><code>cat(&quot;SE(CF regression):    &quot;, round(se36_cf_boot,3), &quot;\n&quot;)</code></pre>
+<pre><code>## SE(CF regression):     0.091</code></pre>
+<pre class="r"><code>library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+
+# 0) Read metadata → Trial &amp; TrialName
+meta &lt;- read_excel(&quot;meta_data.xlsx&quot;) %&gt;%
+  transmute(
+    Trial     = as.character(Trial_ID),
+    TrialName = `Trial Number/Name`
+  )
+
+# 1) Combine stored results
 mse_all &lt;- bind_rows(mse_list)
 se_all  &lt;- bind_rows(se_list)
+ate_all &lt;- bind_rows(ate_list)
 
-mse_all</code></pre>
-<pre><code>## # A tibble: 14 × 3
-##    Trial Model                      MSE
-##    &lt;chr&gt; &lt;chr&gt;                    &lt;dbl&gt;
-##  1 2     ANCOVA                28.5    
-##  2 2     Counterfactual Reg.   28.5    
-##  3 4     ANCOVA                15.4    
-##  4 4     Counterfactual Reg.   15.4    
-##  5 6     ANCOVA                 0.00850
-##  6 6     Counterfactual Reg.    0.00842
-##  7 14    ANCOVA              2090.     
-##  8 14    Counterfactual Reg. 1942.     
-##  9 17    ANCOVA                 0.840  
-## 10 17    Counterfactual Reg.    0.839  
-## 11 19    ANCOVA                 4.14   
-## 12 19    Counterfactual Reg.    3.64   
-## 13 26    ANCOVA                44.4    
-## 14 26    Counterfactual Reg.   44.2</code></pre>
-<pre class="r"><code>se_all</code></pre>
-<pre><code>## # A tibble: 14 × 3
-##    Trial Estimator      SE
-##    &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;
-##  1 2     ANCOVA β̂   0.549 
-##  2 2     HAIPW ATE  0.535 
-##  3 4     ANCOVA β̂   1.11  
-##  4 4     HAIPW ATE  0.992 
-##  5 6     ANCOVA β̂   0.0155
-##  6 6     HAIPW ATE  0.0140
-##  7 14    ANCOVA β̂  12.8   
-##  8 14    HAIPW ATE 11.4   
-##  9 17    ANCOVA β̂   0.128 
-## 10 17    HAIPW ATE  0.116 
-## 11 19    ANCOVA β̂   0.858 
-## 12 19    HAIPW ATE  0.717 
-## 13 26    ANCOVA β̂   1.01  
-## 14 26    HAIPW ATE  0.926</code></pre>
-</div>
+# 2) Recalculate sample sizes 
+sample_size &lt;- tibble(
+  Trial = meta$Trial[c(2,4,6,14,17,19,26,33,35,36)],
+  N     = c(
+    nrow(df2),  nrow(df4),  nrow(df6),
+    nrow(df14), nrow(df17), nrow(df19),
+    nrow(df26), nrow(df33), nrow(df35),
+    nrow(df36)
+  )
+)
+
+# 3) Build MSE table
+mse_tab &lt;- mse_all %&gt;%
+
+  group_by(Trial) %&gt;%
+  summarise(
+    ANCOVA_MSE = MSE[Model == &quot;ANCOVA&quot;],
+    CF_MSE     = MSE[Model == &quot;Counterfactual Reg.&quot;],
+    RF_MSE     = MSE[Model == &quot;Random Forest (OOB)&quot;]
+  ) %&gt;%
+  left_join(sample_size, by=&quot;Trial&quot;) %&gt;%
+  left_join(meta, by=&quot;Trial&quot;) %&gt;%
+  mutate(Rel.Reduction = 100 * (ANCOVA_MSE - CF_MSE) / ANCOVA_MSE) %&gt;%
+  select(Trial, TrialName, N, ANCOVA_MSE, CF_MSE, RF_MSE, Rel.Reduction)
+
+# 4) Build SE table
+se_tab &lt;- se_all %&gt;%
+
+  group_by(Trial) %&gt;%
+  summarise(
+    ANCOVA_SE  = SE[Estimator == &quot;ANCOVA beta&quot;],
+    HAIPW_SE   = SE[Estimator == &quot;HAIPW ATE&quot;],
+    CF_SE_Boot = SE[Estimator == &quot;CF Bootstrap&quot;]
+  ) %&gt;%
+  left_join(sample_size, by=&quot;Trial&quot;) %&gt;%
+  left_join(meta, by=&quot;Trial&quot;) %&gt;%
+  select(Trial, TrialName, N, ANCOVA_SE, HAIPW_SE, CF_SE_Boot)
+
+# 5) Build ATE table
+ate_tab &lt;- ate_all %&gt;%
+  left_join(sample_size, by=&quot;Trial&quot;) %&gt;%
+  left_join(meta, by=&quot;Trial&quot;) %&gt;%
+  select(Trial, TrialName, N, Estimator, Estimate, Std_Error)
+
+# 6) Print MSE table
+cat(&quot;## Pooled MSE Summary\n&quot;)</code></pre>
+<pre><code>## ## Pooled MSE Summary</code></pre>
+<pre class="r"><code>print(
+  xtable(
+    mse_tab,
+    digits  = c(0,0,0,0,3,3,3,2),
+    caption = &quot;In-Sample ANCOVA/CF MSE, RF OOB MSE, and Relative Reduction (%)&quot;
+  ),
+  include.rownames      = FALSE,
+  booktabs              = TRUE,
+  sanitize.text.function = identity
+)</code></pre>
+<pre><code>## % latex table generated in R 4.5.1 by xtable 1.8-4 package
+## % Thu Aug  7 09:15:40 2025
+## \begin{table}[ht]
+## \centering
+## \begin{tabular}{llrrrrr}
+##   \toprule
+## Trial &amp; TrialName &amp; N &amp; ANCOVA_MSE &amp; CF_MSE &amp; RF_MSE &amp; Rel.Reduction \\ 
+##   \midrule
+## 14 &amp; ChiCTR2000031834 &amp; 100 &amp; 2259.153 &amp; 1912.171 &amp; 3982.249 &amp; 15.36 \\ 
+##   17 &amp; ChiCTR2200058389 &amp; 149 &amp; 0.614 &amp; 0.598 &amp; 0.769 &amp; 2.61 \\ 
+##   19 &amp; NCT01707810 &amp; 32 &amp; 4.142 &amp; 1.032 &amp; 5.642 &amp; 75.08 \\ 
+##   2 &amp; NCT04523831 &amp; 400 &amp; 28.538 &amp; 1.991 &amp; 33.566 &amp; 93.02 \\ 
+##   26 &amp; NCT02677675 &amp; 224 &amp; 44.447 &amp; 39.604 &amp; 94.877 &amp; 10.90 \\ 
+##   33 &amp;  &amp; 154 &amp; 117.256 &amp; 1.134 &amp; 147.119 &amp; 99.03 \\ 
+##   35 &amp; NCT01243554 &amp; 72 &amp; 29.439 &amp; 1.128 &amp; 45.038 &amp; 96.17 \\ 
+##   36 &amp; NCT03382353 &amp; 74 &amp; 0.105 &amp; 0.011 &amp; 0.157 &amp; 89.89 \\ 
+##   4 &amp; TCTR20171206003 &amp; 75 &amp; 15.406 &amp; 2.645 &amp; 22.077 &amp; 82.83 \\ 
+##   6 &amp; UMIN000004490 &amp; 345 &amp; 0.012 &amp; 0.004 &amp; 0.013 &amp; 65.61 \\ 
+##    \bottomrule
+## \end{tabular}
+## \caption{In-Sample ANCOVA/CF MSE, RF OOB MSE, and Relative Reduction (%)} 
+## \end{table}</code></pre>
+<pre class="r"><code># 7) Print SE table
+cat(&quot;\n## Pooled SE Summary\n&quot;)</code></pre>
+<pre><code>## 
+## ## Pooled SE Summary</code></pre>
+<pre class="r"><code>print(
+  xtable(
+    se_tab,
+    digits  = c(0,0,0,0,3,3,3),
+    caption = &quot;ANCOVA SE, HAIPW SE, and CF-Bootstrap SE&quot;
+  ),
+  include.rownames      = FALSE,
+  booktabs              = TRUE,
+  sanitize.text.function = identity
+)</code></pre>
+<pre><code>## % latex table generated in R 4.5.1 by xtable 1.8-4 package
+## % Thu Aug  7 09:15:40 2025
+## \begin{table}[ht]
+## \centering
+## \begin{tabular}{llrrrr}
+##   \toprule
+## Trial &amp; TrialName &amp; N &amp; ANCOVA_SE &amp; HAIPW_SE &amp; CF_SE_Boot \\ 
+##   \midrule
+## 19 &amp; NCT01707810 &amp; 32 &amp; 0.858 &amp; 0.717 &amp; 2.456 \\ 
+##    \bottomrule
+## \end{tabular}
+## \caption{ANCOVA SE, HAIPW SE, and CF-Bootstrap SE} 
+## \end{table}</code></pre>
+<pre class="r"><code># 8) Print ATE table
+cat(&quot;\n## Pooled ATE Summary\n&quot;)</code></pre>
+<pre><code>## 
+## ## Pooled ATE Summary</code></pre>
+<pre class="r"><code>print(
+  xtable(
+    ate_tab,
+    digits  = c(0,0,0,0,2,3,3),
+    caption = &quot;ATE Estimates and Bootstrap SE by Method&quot;
+  ),
+  include.rownames      = FALSE,
+  booktabs              = TRUE,
+  sanitize.text.function = identity
+)</code></pre>
+<pre><code>## % latex table generated in R 4.5.1 by xtable 1.8-4 package
+## % Thu Aug  7 09:15:40 2025
+## \begin{table}[ht]
+## \centering
+## \begin{tabular}{llrlrr}
+##   \toprule
+## Trial &amp; TrialName &amp; N &amp; Estimator &amp; Estimate &amp; Std_Error \\ 
+##   \midrule
+## 2 &amp; NCT04523831 &amp; 400 &amp; ANCOVA &amp; -1.504 &amp; 0.549 \\ 
+##   2 &amp; NCT04523831 &amp; 400 &amp; HAIPW (stacking) &amp; -1.517 &amp; 0.535 \\ 
+##   2 &amp; NCT04523831 &amp; 400 &amp; CF regression &amp; -2.367 &amp; 0.757 \\ 
+##   4 &amp; TCTR20171206003 &amp; 75 &amp; ANCOVA &amp; 0.143 &amp; 1.110 \\ 
+##   4 &amp; TCTR20171206003 &amp; 75 &amp; HAIPW (stacking) &amp; 0.371 &amp; 1.001 \\ 
+##   4 &amp; TCTR20171206003 &amp; 75 &amp; CF regression &amp; -6.534 &amp; 1.161 \\ 
+##   6 &amp; UMIN000004490 &amp; 345 &amp; ANCOVA &amp; -0.001 &amp; 0.013 \\ 
+##   6 &amp; UMIN000004490 &amp; 345 &amp; HAIPW (stacking) &amp; -0.054 &amp; 0.004 \\ 
+##   6 &amp; UMIN000004490 &amp; 345 &amp; CF regression &amp; -0.165 &amp; 0.017 \\ 
+##   14 &amp; ChiCTR2000031834 &amp; 100 &amp; ANCOVA &amp; 72.790 &amp; 12.950 \\ 
+##   14 &amp; ChiCTR2000031834 &amp; 100 &amp; HAIPW (stacking) &amp; 70.844 &amp; 11.448 \\ 
+##   14 &amp; ChiCTR2000031834 &amp; 100 &amp; CF regression &amp; 144.304 &amp; 26.338 \\ 
+##   17 &amp; ChiCTR2200058389 &amp; 149 &amp; ANCOVA &amp; -0.653 &amp; 0.138 \\ 
+##   17 &amp; ChiCTR2200058389 &amp; 149 &amp; HAIPW (stacking) &amp; -0.650 &amp; 0.128 \\ 
+##   17 &amp; ChiCTR2200058389 &amp; 149 &amp; CF regression &amp; -1.468 &amp; 0.584 \\ 
+##   19 &amp; NCT01707810 &amp; 32 &amp; ANCOVA &amp; 0.091 &amp; 0.858 \\ 
+##   19 &amp; NCT01707810 &amp; 32 &amp; HAIPW (stacking) &amp; -0.154 &amp; 0.717 \\ 
+##   19 &amp; NCT01707810 &amp; 32 &amp; CF regression &amp; -3.723 &amp; 2.456 \\ 
+##   26 &amp; NCT02677675 &amp; 224 &amp; ANCOVA &amp; -8.641 &amp; 1.011 \\ 
+##   26 &amp; NCT02677675 &amp; 224 &amp; HAIPW (stacking) &amp; -8.586 &amp; 0.927 \\ 
+##   26 &amp; NCT02677675 &amp; 224 &amp; CF regression &amp; -9.291 &amp; 1.263 \\ 
+##   33 &amp;  &amp; 154 &amp; ANCOVA &amp; -5.332 &amp; 1.831 \\ 
+##   33 &amp;  &amp; 154 &amp; HAIPW (stacking) &amp; -2.767 &amp; 0.146 \\ 
+##   33 &amp;  &amp; 154 &amp; CF regression &amp; 0.654 &amp; 1.992 \\ 
+##   35 &amp; NCT01243554 &amp; 72 &amp; ANCOVA &amp; 2.410 &amp; 1.609 \\ 
+##   35 &amp; NCT01243554 &amp; 72 &amp; HAIPW (stacking) &amp; -1.885 &amp; 0.139 \\ 
+##   35 &amp; NCT01243554 &amp; 72 &amp; CF regression &amp; -6.079 &amp; 1.494 \\ 
+##   36 &amp; NCT03382353 &amp; 74 &amp; ANCOVA &amp; -0.191 &amp; 0.094 \\ 
+##   36 &amp; NCT03382353 &amp; 74 &amp; HAIPW (stacking) &amp; 0.064 &amp; 0.017 \\ 
+##   36 &amp; NCT03382353 &amp; 74 &amp; CF regression &amp; 0.387 &amp; 0.091 \\ 
+##    \bottomrule
+## \end{tabular}
+## \caption{ATE Estimates and Bootstrap SE by Method} 
+## \end{table}</code></pre>
 
 
 
