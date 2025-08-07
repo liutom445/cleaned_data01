@@ -5,8 +5,8 @@ import pandas as pd
 from openai import OpenAI
 
 # ─── Configuration ───────────────────────────────────────────────────────────
-INPUT_CSV      = "trial33.csv"
-OUTPUT_DIR     = "trial33_results/"   # directory prefix for output files
+INPUT_CSV      = "trial 33/trial33.csv"
+OUTPUT_DIR     = "trial 33/"   # directory prefix for output files
 OPENAI_MODEL   = "gpt-4.1"
 
 # ─── Helper Functions ─────────────────────────────────────────────────────────
@@ -113,13 +113,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--input", 
-        default="Research/collection/SS 25/Meeting 0729/cleaned_data/trial 33/trial33.csv",
+        default="trial 33/trial33.csv",
         help="Path to input CSV with baseline covariates"
     )
     parser.add_argument(
         "--prefix",
         dest="output_dir",
-        default="Research/collection/SS 25/Meeting 0729/cleaned_data/trial 33/",
+        default="trial 33/",
         help="Prefix (directory) for output files"
     )
     parser.add_argument(

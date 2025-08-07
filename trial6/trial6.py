@@ -5,9 +5,9 @@ import pandas as pd
 from openai import OpenAI
 
 # ─── Configuration ───────────────────────────────────────────────────────────
-INPUT_CSV        = "trial6.csv"                   # Path to your trial6 dataset
-OUTPUT_CSV       = "trial6_counterfactuals.csv"   # Where to save predictions
-OPENAI_MODEL     = "o3-mini"                  # LLM for counterfactuals
+INPUT_CSV        = "trial6/trial6.csv"                   # Path to your trial6 dataset
+OUTPUT_CSV       = "trial6/trial6_counterfactuals.csv"   # Where to save predictions
+OPENAI_MODEL     = "gpt-4.1-mini"                  # LLM for counterfactuals
 DEEPSEEK_MODEL   = "deepseek-chat"                # Deepseek model
 
 # ─── Helper Functions ─────────────────────────────────────────────────────────

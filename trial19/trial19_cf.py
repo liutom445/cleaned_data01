@@ -8,7 +8,7 @@ from openai import OpenAI
 API_KEY     = "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"
 MODEL       = "o4-mini"
 INPUT_CSV   = "trial19/trial19.csv"
-OUTPUT_CSV  = "trial19/"
+OUTPUT_CSV  = "trial19/trial19_cf.csv"
 
 # ─── Helper Functions ─────────────────────────────────────────────────────────
 def parse_numeric(text: str) -> float:

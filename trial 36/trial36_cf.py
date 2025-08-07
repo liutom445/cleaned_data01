@@ -7,7 +7,7 @@ from openai import OpenAI
 
 # ─── Configuration ───────────────────────────────────────────────────────────
 INPUT_CSV    = "trial 36/trial36.csv"
-OUTPUT_DIR   = "trial36/"
+OUTPUT_DIR   = "trial 36/"
 MODEL        = "o4-mini"
 
 # ─── Helper Functions ─────────────────────────────────────────────────────────
@@ -20,12 +20,11 @@ def parse_numeric(text: str) -> float:
 
 def generate_cf_prompt(row: pd.Series) -> str:
     """
-    Build a prompt for the counterfactual 12-month attention–executive change,
-    using the actual observed change and assigned treatment.
+    Build a prompt for the counterfactual 12-month Attention–Executive change,
+    using the observed change and assigned intervention.
     """
-    # Determine arms
-    actual_arm = row["Treatment"]                      # "PI" or "MI"
-    other_arm  = "MI" if actual_arm == "PI" else "PI"
+    actual_arm = row["Treatment"]                  # "ACI" or "PI"
+    other_arm  = "PI" if actual_arm == "ACI" else "ACI"
     actual_val = row["YP_delta_AttentionExe_12m"]
 
     lines = [
@@ -34,14 +33,19 @@ def generate_cf_prompt(row: pd.Series) -> str:
         "You are an expert in cognitive interventions and clinical trial outcomes.",
         "",
         "Baseline covariates (month 0):",
-        f"  • IPAQ total MET-min/week:    {row['X_IPAQ_total_0m']}",
-        f"  • Mediterranean diet score:   {row['X_MeDi_score_0m']}",
-        f"  • Memory composite z-score:    {row['X_MemoryNew_0m']}",
-        f"  • Attention–Executive z-score: {row['X_AttentionExe_0m']}",
-        f"  • Visuo-spatial z-score:       {row['X_VisuoSpNew_0m']}",
+        f"  • Geriatric Depression Scale (GDS):        {row['X_GDS_0m']}",
+        f"  • Everyday Memory Questionnaire (EMQ):      {row['X_EMQ_0m']}",
+        f"  • State Anxiety Inventory (STAI):           {row['X_STAI_0m']}",
+        f"  • Mini-Mental State Exam (MMSE):            {row['X_MMSE_0m']}",
+        f"  • RAVLT delayed recall:                    {row['X_RAVLT_delayedrecall_0m']}",
+        f"  • IPAQ total MET-min/week:                 {row['X_IPAQ_total_0m']}",
+        f"  • Mediterranean diet score:                {row['X_MeDi_score_0m']}",
+        f"  • Memory composite z-score:                {row['X_MemoryNew_0m']}",
+        f"  • Attention–Executive z-score:             {row['X_AttentionExe_0m']}",
+        f"  • Visuo-spatial composite z-score:         {row['X_VisuoSpNew_0m']}",
         "",
-        f"The patient as assigned to **{actual_arm}** had a 12-month change in the attention–executive composite z-score of **{actual_val:.3f}**.",
-        f"What would their 12-month attention–executive change be if they instead received **{other_arm}**?",
+        f"The participant assigned to **{actual_arm}** experienced a 12-month change in the Attention–Executive z-score of **{actual_val:.3f}**.",
+        f"If they had instead received **{other_arm}**, what would their 12-month Attention–Executive change be?",
         "",
         "Answer with only the numeric change from baseline to 12 months."
     ]
@@ -53,6 +57,9 @@ def predict_counterfactuals(input_csv: str,
                             model: str = MODEL):
     # 1) Load data
     df = pd.read_csv(input_csv)
+
+    # 1.1) Filter to only ACI or PI treatments
+    df = df[df['Treatment'].isin(['ACI', 'PI'])].reset_index(drop=True)
 
     # 2) Init OpenAI client
     client = OpenAI(api_key=api_key)
@@ -80,7 +87,6 @@ def predict_counterfactuals(input_csv: str,
         cf_preds.append(cf_val)
 
         query_count += 1
-        # Progress & ETA every 30 calls
         if query_count % 30 == 0 or query_count == total:
             elapsed = time.time() - start_time
             eta     = (elapsed / query_count) * (total - query_count)
@@ -98,7 +104,7 @@ def predict_counterfactuals(input_csv: str,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate counterfactual attention–executive predictions for Trial 36"
+        description="Generate counterfactual Attention–Executive predictions for Trial 36"
     )
     parser.add_argument(
         "--input",
@@ -113,7 +119,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--api_key",
-        default="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",
+        default= "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",
         help="OpenAI API key (or rely on OPENAI_API_KEY env var)"
     )
     parser.add_argument(
@@ -129,3 +135,4 @@ if __name__ == "__main__":
         api_key=args.api_key,
         model=args.model
     )
+
